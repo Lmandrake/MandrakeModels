@@ -70,7 +70,7 @@ def merged(out: Path):
             r["cs_ms_per_tick_lo"] = r["py_ms_per_tick"] / ratio * MONO_LO
             r["cs_ms_per_tick_hi"] = r["py_ms_per_tick"] / ratio * MONO_HI
             r["cs_basis"] = basis
-        for f in ("steps", "t_end", "capped", "blew_up", "blow_t", "error", "settled", "settle_t",
+        for f in ("final_rate", "steps", "t_end", "capped", "blew_up", "blow_t", "error", "settled", "settle_t",
                   "settle_steps", "vol_err_rel", "min_h", "max_h", "wet_frac", "still_drift_m",
                   "max_speed", "gif"):
             r[f] = a.get(f)
@@ -86,7 +86,7 @@ def merged(out: Path):
 
 CSV_FIELDS = ["solver", "scene", "n", "kind", "ms_per_step", "dt_mean", "py_ms_per_tick", "cs_ms_per_tick_lo",
               "cs_ms_per_tick_hi", "cs_basis", "steps", "t_end", "capped", "blew_up", "blow_t", "error",
-              "settled", "settle_t", "settle_steps", "vol_err_rel", "min_h", "max_h", "wet_frac",
+              "settled", "settle_t", "settle_steps", "final_rate", "vol_err_rel", "min_h", "max_h", "wet_frac",
               "still_drift_m", "max_speed", "max_dt_dam128"]
 
 
@@ -136,13 +136,13 @@ def md_headline(h, n):
 
 def md_scene(rows, n):
     L = [f"### Every run at {n} x {n}", "",
-         "| scene | solver | ms/step | dt s | steps | sim s | settled at s | vol err | min h | blew up | capped | error |",
-         "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+         "| scene | solver | ms/step | dt s | steps | sim s | settled at s | final max dh/dt m/s | vol err | min h | blew up | capped | error |",
+         "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         if r["n"] != n:
             continue
         L.append(f"| {r['scene']} | {r['solver']} | {_f(r['ms_per_step'])} | {_f(r['dt_mean'])} | {_f(r['steps'])} | "
-                 f"{_f(r['t_end'])} | {_f(r['settle_t'])} | {_f(r['vol_err_rel'], '{:.1e}')} | {_f(r['min_h'], '{:.1e}')} | "
+                 f"{_f(r['t_end'])} | {_f(r['settle_t'])} | {_f(r.get('final_rate'), '{:.1e}')} | {_f(r['vol_err_rel'], '{:.1e}')} | {_f(r['min_h'], '{:.1e}')} | "
                  f"{_f(r['blew_up'])}{' (' + _f(r['blow_t']) + ' s)' if r.get('blow_t') else ''} | {_f(r['capped'])} | "
                  f"{html.escape(str(r['error']))[:60] if r['error'] else ''} |")
     return "\n".join(L)
@@ -257,9 +257,21 @@ def write(out: Path, curate: Path | None = None):
     parts += [md_scaling(rows, sizes), ""]
     if md:
         parts += ["### Largest fixed dt that survives 20 s of the 128 dam break (water) / gaussian / ripples", "",
+                  "Survives means no NaN, no blow-up and depth never above 1.25x its start (scalar: no new "
+                  "extreme; wave: bounded) over the whole run. Bounded is not accurate: a limiter can keep a "
+                  "solver bounded at a dt where its wave speeds are already wrong.", "",
                   "| solver | max dt s | solver's own stable_dt s | note |", "|---|---|---|---|"]
         for s, r in sorted(md.items()):
             parts.append(f"| {s} | {_f(r.get('max_dt'))} | {_f(r.get('own_stable_dt'))} | {r.get('note', '')} |")
+        parts.append("")
+    acc = json.loads((out / "accuracy.json").read_text()) if (out / "accuracy.json").exists() else None
+    if acc:
+        parts += [f"### Flood timing: water through the dam breach in {acc['T']:g} s ({acc['scene']}, {acc['n']}^2)", "",
+                  f"Reference {acc['reference']} (matches Stoker's analytic dam break to 0.1%, tests/test_water_main.py). "
+                  "Ratio well below 1: floods arrive late; above 1: early.", "",
+                  "| solver | m^3 through breach | ratio to reference |", "|---|---|---|"]
+        for k, v in sorted(acc["m3"].items(), key=lambda kv: -(acc["ratio"].get(kv[0]) or 0)):
+            parts.append(f"| {k} | {_f(v, '{:.0f}')} | {_f(acc['ratio'].get(k), '{:.2f}')} |")
         parts.append("")
     frame_n = 250 if 250 in sizes else (sizes[0] if sizes else None)
     if frame_n:

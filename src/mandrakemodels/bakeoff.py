@@ -341,12 +341,20 @@ def survives(cls, kind, dt):
     return bool(np.isfinite(u).all() and np.abs(u).max() < 10.0)
 
 
-def max_dt(cls, kind, lo=0.005, hi_cap=64.0):
+def max_dt(cls, kind, own=math.inf, lo=1e-3, hi_cap=64.0):
+    """Largest fixed dt that survives, searched from the solver's own stable dt (0.5 s when it has
+    none): halve until it survives, double until it fails, then bisect 6 times in log space."""
     if cls.name in ("ca_game",):
         return None, "n/a: fixed pass"
-    t = lo
-    if not survives(cls, kind, t):
-        return t, "fails at the smallest dt tried"
+    t = min(max(own, 0.005), 2.0) if math.isfinite(own) else 0.5
+    while True:
+        r = survives(cls, kind, t)
+        if r:
+            break
+        if r is None or t / 2 < lo:
+            return None, f"< {t:g} (fails at the smallest dt tried)" if r is not None else \
+                f"not searched: < {t:g} needs over 40000 steps"
+        t /= 2
     good, bad = t, None
     while t < hi_cap:
         t *= 2
@@ -357,6 +365,8 @@ def max_dt(cls, kind, lo=0.005, hi_cap=64.0):
             bad = t
             break
         good = t
+    if cls.name == "kinematic_wave":
+        return good, "meaningless here: the dam-break bed is flat, so kinematic flow never starts"
     if bad is None:
         return good, f">= {good:g} (cap)"
     for _ in range(6):
@@ -382,13 +392,13 @@ def phase_maxdt(a):
             print("maxdt: budget spent (resume)", flush=True)
             break
         a0 = time.time()
-        try:
-            v, note = max_dt(cls, cls.kind)
-        except Exception as e:
-            v, note = None, f"error {type(e).__name__}: {e}"
         sc_name, n, _ = MAXDT_SCENE[cls.kind]
         s = cls.from_scene(scenes.build(sc_name, n))
         own = s.stable_dt()
+        try:
+            v, note = max_dt(cls, cls.kind, own)
+        except Exception as e:
+            v, note = None, f"error {type(e).__name__}: {e}"
         r = dict(solver=cls.name, kind=cls.kind, scene=sc_name, n=n, max_dt=v, note=note,
                  own_stable_dt=None if math.isinf(own) else own, wall_s=time.time() - a0)
         with path.open("a") as f:
@@ -404,6 +414,41 @@ def phase_probe(a):
     res = probe_numba.run(n=a.probe_n)
     (out / "probe.json").write_text(json.dumps(res, indent=1))
     print(json.dumps(res, indent=1))
+
+
+# ------------------------------------------------------------------------------------------ accuracy
+
+def breach_volume(cls, n=128, T=20.0):
+    """m^3 that crosses the dam line of ``dam_break`` in T seconds (each solver at its own dt)."""
+    sc = scenes.build("dam_break", n)
+    c = int(np.where(sc.init["wall"].any(0))[0].max()) + 1
+    s = cls.from_scene(sc)
+    r0 = float(s.h[:, c:].sum())
+    while s.t < T - 1e-9:
+        s.step(min(s.stable_dt(), WATER_DT_CAP, T - s.t))
+        if s.blown_up():
+            return None
+    return (float(s.h[:, c:].sum()) - r0) * sc.grid.dx ** 2
+
+
+def phase_accuracy(a):
+    """Breach throughput of every water solver against swe_hll, the solver that matches Stoker's
+    dam break to 0.1% (tests/test_water_main.py). A ratio far from 1 means wrong flood timing."""
+    out = run_dir(a.run)
+    res = {"scene": "dam_break", "n": 128, "T": 20.0, "reference": "swe_hll", "m3": {}}
+    for cls in sorted(REGISTRY.values(), key=lambda c: c.name):
+        if cls.kind != "water" or (a.solvers and cls.name not in a.solvers):
+            continue
+        t0 = time.time()
+        try:
+            res["m3"][cls.name] = breach_volume(cls)
+        except Exception as e:
+            res["m3"][cls.name] = None
+            res.setdefault("errors", {})[cls.name] = f"{type(e).__name__}: {e}"
+        print(f"accuracy {cls.name}: {res['m3'][cls.name]} ({time.time() - t0:.0f}s)", flush=True)
+    ref = res["m3"].get("swe_hll")
+    res["ratio"] = {k: (v / ref if (v is not None and ref) else None) for k, v in res["m3"].items()}
+    (out / "accuracy.json").write_text(json.dumps(res, indent=1))
 
 
 # -------------------------------------------------------------------------------------------- report
@@ -430,7 +475,7 @@ def phase_report(a):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="mandrakemodels.bakeoff")
-    p.add_argument("phase", choices=["quality", "timing", "maxdt", "probe", "report"])
+    p.add_argument("phase", choices=["quality", "timing", "maxdt", "probe", "accuracy", "report"])
     p.add_argument("--run", default="main")
     p.add_argument("--sizes", default=",".join(map(str, SIZES)))
     p.add_argument("--solvers", default="")
@@ -448,7 +493,7 @@ def main(argv=None):
     a.solvers = [x for x in a.solvers.split(",") if x] or None
     a.scenes = [x for x in a.scenes.split(",") if x] or None
     {"quality": phase_quality, "timing": phase_timing, "maxdt": phase_maxdt, "probe": phase_probe,
-     "report": phase_report}[a.phase](a)
+     "accuracy": phase_accuracy, "report": phase_report}[a.phase](a)
 
 
 if __name__ == "__main__":
