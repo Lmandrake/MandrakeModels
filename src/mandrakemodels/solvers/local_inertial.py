@@ -18,13 +18,15 @@ class LocalInertial(WaterSolver):
 
     Cannot do: fast jets, bores and hydraulic jumps correctly (no momentum advection); it is valid for
     Froude < ~0.5 (de Almeida & Bates 2013); wet/dry fronts recede crudely (Cozzolino 2019). Explicit:
-    dt <= alpha dx / sqrt(g h_max).
+    dt <= alpha dx / sqrt(g h_max). Default alpha 0.6: with theta 0.8 and alpha 0.7 a lake at rest on
+    this rough bed grew roundoff into metre-scale sloshing (measured 2026-11-12 at 64, 128, 250); 0.6
+    held it to 1e-15 at all three.
     """
 
     name = "local_inertial"
     family = "shallow water (local inertial)"
 
-    def __init__(self, grid, z, h=None, wall=None, forcing=None, manning=0.03, theta=0.8, alpha=0.7):
+    def __init__(self, grid, z, h=None, wall=None, forcing=None, manning=0.03, theta=0.8, alpha=0.6):
         super().__init__(grid, z, h, wall, forcing, manning)
         self.theta = theta
         self.alpha = alpha
