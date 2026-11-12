@@ -45,6 +45,11 @@ def test_closed_dam_break_conserves_and_is_symmetric(name):
     asym = np.abs(s.h - s.h[::-1, :]).max()
     assert asym < 1e-8, f"y-mirror asymmetry {asym:.2e} m"
     moved = np.abs(s.h - sc.init["h"]).max()
+    if name in NOT_WELL_BALANCED:
+        # characterisation: kinematic flow follows the bed slope only, and this bed is flat, so the
+        # dam cannot break at all (a documented limit, pinned so a change shows up)
+        assert moved < 1e-9, f"{name} moved {moved:.2e} m on a flat bed"
+        return
     assert moved > 1e-2, "nothing flowed"
 
 
