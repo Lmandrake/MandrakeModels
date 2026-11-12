@@ -209,7 +209,7 @@ class WaterSolver(Solver):
         out[:, 1:] += np.maximum(-Fx, 0)
         out[:-1, :] += np.maximum(Fy, 0)
         out[1:, :] += np.maximum(-Fy, 0)
-        with np.errstate(divide="ignore", invalid="ignore"):
+        with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
             s = np.where(out > V, V / out, 1.0)
         s = np.where(out > 0, s, 1.0)
         sx = np.where(Fx > 0, s[:, :-1], s[:, 1:])
