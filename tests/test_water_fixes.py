@@ -95,3 +95,15 @@ def test_frictionless_pipe_cannot_push_water_over_a_dry_face(name):
     s.f_r[:] = 50.0
     s.step(0.05)
     assert s.h[0, 1] == 0.0, s.h
+
+
+def test_ca_game_step_scales_with_dt():
+    """A ca_game step of dt 0.25 moves half the volume of a 0.5 s pass (it ignored dt and moved a whole pass)."""
+    g = Grid(1, 2, 1.0)
+    z = np.zeros((1, 2))
+    moved = {}
+    for dt in (0.5, 0.25):
+        s = REGISTRY["ca_game"](g, z.copy(), np.array([[1.0, 0.9]]))
+        s.step(dt)
+        moved[dt] = 1.0 - s.h[0, 0]
+    assert abs(moved[0.25] / moved[0.5] - 0.5) < 1e-9, moved
