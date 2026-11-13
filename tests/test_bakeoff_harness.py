@@ -75,3 +75,10 @@ def test_rain_reaches_the_step_that_ends_at_its_cutoff():
     s.t = 0.5
     s.step(0.5)
     assert abs(s.h.mean() - 5e-4) < 1e-12, s.h
+
+
+def test_water_headline_leaves_out_kinematic_wave():
+    """kinematic_wave is out of the water headline (bed-slope only; it blew up in ocean_edge and swell)."""
+    from mandrakemodels import report
+    rows = [dict(solver=k, scene="river", n=325, kind="water", ms_per_step=1.0) for k in ("kinematic_wave", "pipes")]
+    assert [r["solver"] for r in report.headline(rows, 325)] == ["pipes"]
