@@ -1,13 +1,16 @@
-{"solver": "ca_game", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": null, "note": "n/a: fixed pass", "own_stable_dt": 0.5, "wall_s": 0.0013904571533203125}
-{"solver": "diffusion_wave_explicit", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.003732269320728162, "note": "", "own_stable_dt": 4.25094936886509e-05, "wall_s": 73.83926677703857}
-{"solver": "diffusion_wave_implicit_adi", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 64.0, "note": ">= 64 (cap)", "own_stable_dt": 5.0, "wall_s": 0.5622072219848633}
-{"solver": "diffusion_wave_implicit_cg", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 64.0, "note": ">= 64 (cap)", "own_stable_dt": 5.0, "wall_s": 5.183951139450073}
-{"solver": "heat_adi", "kind": "scalar", "scene": "gaussian", "n": 64, "max_dt": 56.20006913194558, "note": "", "own_stable_dt": null, "wall_s": 0.07321667671203613}
-{"solver": "heat_explicit", "kind": "scalar", "scene": "gaussian", "n": 64, "max_dt": 0.38668934207755756, "note": "", "own_stable_dt": 0.225, "wall_s": 0.02306199073791504}
-{"solver": "kinematic_wave", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 64.0, "note": "meaningless here: the dam-break bed is flat, so kinematic flow never starts", "own_stable_dt": 10.0, "wall_s": 0.06272125244140625}
-{"solver": "linear_wave", "kind": "wave", "scene": "ripples", "n": 64, "max_dt": 0.07091913802985489, "note": "", "own_stable_dt": 0.06363961030678927, "wall_s": 0.09760117530822754}
-{"solver": "local_inertial", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.20662188253876093, "note": "", "own_stable_dt": 0.19153632850614702, "wall_s": 1.2813429832458496}
-{"solver": "pipes", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.19694113692743634, "note": "", "own_stable_dt": 0.15186237666881996, "wall_s": 1.6540658473968506}
-{"solver": "swe_hll", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.1708322734807564, "note": "", "own_stable_dt": 0.14365224637961027, "wall_s": 4.0161097049713135}
-{"solver": "swe_lbm", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.29399274469468395, "note": "", "own_stable_dt": 0.1276908856707647, "wall_s": 9.263614654541016}
-{"solver": "wca2d", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 81.72216682928939, "note": ">= 81.7222 (cap)", "own_stable_dt": 0.15961360708845584, "wall_s": 0.8413510322570801}
+{"solver": "ca_game", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": null, "note": "n/a: fixed pass", "own_stable_dt": 0.5, "wall_s": 0.0013463497161865234}
+{"solver": "diffusion_wave_explicit", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.004026225829873136, "note": "", "own_stable_dt": 4.25094936886509e-05, "wall_s": 50.35798454284668}
+{"solver": "diffusion_wave_implicit_adi", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 64.0, "note": ">= 64 (cap)", "own_stable_dt": 5.0, "wall_s": 0.32117605209350586}
+{"solver": "diffusion_wave_implicit_cg", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 64.0, "note": ">= 64 (cap)", "own_stable_dt": 5.0, "wall_s": 3.5867345333099365}
+{"solver": "heat_adi", "kind": "scalar", "scene": "gaussian", "n": 64, "max_dt": 64.0, "note": ">= 64 (cap)", "own_stable_dt": null, "wall_s": 0.030508995056152344}
+{"solver": "heat_explicit", "kind": "scalar", "scene": "gaussian", "n": 64, "max_dt": 0.39090011293658394, "note": "", "own_stable_dt": 0.225, "wall_s": 0.013069868087768555}
+{"solver": "kinematic_wave", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 64.0, "note": "meaningless here: the dam-break bed is flat, so kinematic flow never starts", "own_stable_dt": 10.0, "wall_s": 0.02582406997680664}
+{"solver": "linear_wave", "kind": "wave", "scene": "ripples", "n": 64, "max_dt": 0.07091913802985489, "note": "", "own_stable_dt": 0.06363961030678927, "wall_s": 0.07313227653503418}
+{"solver": "local_inertial", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.20662188253876093, "note": "", "own_stable_dt": 0.19153632850614702, "wall_s": 0.852025032043457}
+{"solver": "local_inertial_frcap", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.20662188253876093, "note": "", "own_stable_dt": 0.19153632850614702, "wall_s": 0.8905224800109863}
+{"solver": "local_inertial_frcap07", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.20662188253876093, "note": "", "own_stable_dt": 0.19153632850614702, "wall_s": 0.9229636192321777}
+{"solver": "pipes", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.19694113692743634, "note": "", "own_stable_dt": 0.15186237666881996, "wall_s": 1.1121652126312256}
+{"solver": "pipes_theta", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.19694113692743634, "note": "", "own_stable_dt": 0.15186237666881996, "wall_s": 1.333083152770996}
+{"solver": "swe_hll", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.1708322734807564, "note": "", "own_stable_dt": 0.14365224637961027, "wall_s": 2.328141689300537}
+{"solver": "swe_lbm", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 0.29399274469468395, "note": "", "own_stable_dt": 0.1276908856707647, "wall_s": 5.023047924041748}
+{"solver": "wca2d", "kind": "water", "scene": "dam_break", "n": 128, "max_dt": 64.0, "note": ">= 64 (cap)", "own_stable_dt": 0.15961360708845584, "wall_s": 0.4987971782684326}
