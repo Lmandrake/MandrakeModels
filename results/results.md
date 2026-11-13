@@ -17,30 +17,30 @@ Grid 400^2, median of 30 steps, single thread; numba kernels are plain loops of 
 | solver | ms/step numpy | dt s | numpy ms/tick | C# ms/tick guess | fits 0.5 ms/tick | worst vol err | lake drift m | settled | blow-ups | errors | capped |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | ca_game | 3.74 | 0.5 | 0.125 | 0.021-0.056 | yes | 1.8e-14 | 4.4e-16 | 1/9 | 0 | 0 | 0 |
-| diffusion_wave_explicit | 7.28 | 4.4e-05 | 2.53e+03 | 4.2e+02-1.1e+03 | no | 1.4e-15 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
-| diffusion_wave_implicit_adi | 905 | 5 | 3.02 | 0.51-1.4 | no | 7.3e-16 | 5.9e-11 | 1/9 | 0 | 0 | 0 |
+| diffusion_wave_explicit | 6.85 | 4.4e-05 | 2.53e+03 | 4.2e+02-1.1e+03 | no | 1.4e-15 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
+| diffusion_wave_implicit_adi | 905 | 5 | 3.02 | 0.51-1.4 | no | 6.9e-16 | 5.9e-11 | 1/9 | 0 | 0 | 0 |
 | diffusion_wave_implicit_cg | 3.32e+03 | 5 | 11.1 | 1.9-5 | no | 7.3e-16 | 2.2e-16 | 1/9 | 0 | 0 | 7 |
-| kinematic_wave | 7.92 | 0.0712 | 1.75 | 0.29-0.79 | maybe | 2.8e-15 | 1.0e+04 | 1/9 | 5 | 0 | 0 |
-| local_inertial | 9.25 | 0.193 | 0.815 | 0.23-0.61 | maybe | 1.1e-15 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
-| pipes | 11 | 0.152 | 1.21 | 0.046-0.12 | yes | 4.7e-14 | 3.6e-15 | 1/9 | 0 | 0 | 0 |
-| swe_hll | 24.6 | 0.145 | 2.89 | 0.49-1.3 | maybe | 1.7e-15 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
+| kinematic_wave | 7.5 | 0.0712 | 1.75 | 0.29-0.79 | maybe | 2.6e-15 | 1.0e+04 | 1/9 | 5 | 0 | 0 |
+| local_inertial | 8.56 | 0.193 | 0.797 | 0.22-0.6 | maybe | 1.1e-15 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
+| pipes | 9.27 | 0.152 | 1.02 | 0.039-0.1 | yes | 4.7e-14 | 3.6e-15 | 1/9 | 0 | 0 | 0 |
+| swe_hll | 23.5 | 0.145 | 2.7 | 0.45-1.2 | maybe | 1.7e-15 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
 | swe_lbm | 80.4 | 0.0965 | 10.8 | 1.8-4.8 | no | 2.6e-14 | 4.4e-16 | 1/9 | 0 | 0 | 8 |
-| wca2d | 15.1 | 0.251 | 0.862 | 0.14-0.39 | yes | 4.8e-16 | 2.2e-16 | 1/9 | 0 | 0 | 0 |
+| wca2d | 13.6 | 0.251 | 0.862 | 0.14-0.39 | yes | 4.8e-16 | 2.2e-16 | 1/9 | 0 | 0 | 0 |
 
 ### Water solvers at 500 x 500 (median over water scenes)
 
 | solver | ms/step numpy | dt s | numpy ms/tick | C# ms/tick guess | fits 0.5 ms/tick | worst vol err | lake drift m | settled | blow-ups | errors | capped |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | ca_game | 13.5 | 0.5 | 0.45 | 0.076-0.2 | yes | 1.8e-14 | 4.4e-16 | 1/9 | 0 | 0 | 0 |
-| diffusion_wave_explicit | 18.8 | 5.48e-05 | 5.29e+03 | 8.9e+02-2.4e+03 | no | 3.1e-16 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
-| diffusion_wave_implicit_adi | 2.48e+03 | 5 | 8.28 | 1.4-3.7 | no | 4.1e-16 | 3.0e-11 | 1/9 | 0 | 0 | 5 |
+| diffusion_wave_explicit | 17.4 | 5.48e-05 | 5.29e+03 | 8.9e+02-2.4e+03 | no | 2.9e-16 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
+| diffusion_wave_implicit_adi | 2.48e+03 | 5 | 8.27 | 1.4-3.7 | no | 4.1e-16 | 3.0e-11 | 1/9 | 0 | 0 | 5 |
 | diffusion_wave_implicit_cg | 9.64e+03 | 5 | 32.1 | 5.4-14 | no | 2.6e-16 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
-| kinematic_wave | 19.5 | 0.0845 | 3.75 | 0.63-1.7 | no | 1.0e-15 | 1.0e+04 | 1/9 | 5 | 0 | 1 |
-| local_inertial | 22.2 | 0.207 | 2.01 | 0.56-1.5 | no | 6.3e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
-| pipes | 30.9 | 0.152 | 3.39 | 0.13-0.34 | yes | 4.6e-14 | 2.7e-15 | 1/9 | 0 | 0 | 0 |
-| swe_hll | 58 | 0.155 | 7.16 | 1.2-3.2 | no | 6.3e-16 | 8.9e-16 | 1/9 | 0 | 0 | 7 |
+| kinematic_wave | 17.9 | 0.0845 | 3.29 | 0.55-1.5 | no | 9.9e-16 | 1.0e+04 | 1/9 | 5 | 0 | 0 |
+| local_inertial | 21.9 | 0.207 | 1.66 | 0.47-1.2 | maybe | 6.3e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
+| pipes | 26.8 | 0.152 | 2.94 | 0.11-0.3 | yes | 4.6e-14 | 2.7e-15 | 1/9 | 0 | 0 | 0 |
+| swe_hll | 58 | 0.155 | 7.16 | 1.2-3.2 | no | 6.3e-16 | 8.9e-16 | 1/9 | 0 | 0 | 6 |
 | swe_lbm | 178 | 0.12 | 24.7 | 4.2-11 | no | 6.1e-15 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
-| wca2d | 40.2 | 0.254 | 2.72 | 0.46-1.2 | maybe | 4.7e-16 | 4.4e-16 | 1/9 | 0 | 0 | 2 |
+| wca2d | 40.2 | 0.254 | 2.72 | 0.46-1.2 | maybe | 4.7e-16 | 4.4e-16 | 1/9 | 0 | 0 | 1 |
 
 ### numpy ms/step by size (median over scenes; timing phase, sequential, one thread)
 
@@ -50,16 +50,16 @@ Grid 400^2, median of 30 steps, single thread; numba kernels are plain loops of 
 | stable_fluids | flow | 7.22 | 25.6 | 87.4 | 245 | 246 | 481 |
 | heat_adi | scalar | 0.253 | 0.709 | 1.35 | 2.34 | 2.56 | 3.87 |
 | heat_explicit | scalar | 0.0224 | 0.0775 | 0.241 | 0.521 | 0.685 | 1.23 |
-| ca_game | water | 0.125 | 0.403 | 1.84 | 3.74 | 8.79 | 13.5 |
-| diffusion_wave_explicit | water | 0.235 | 0.851 | 3.46 | 7.28 | 14.4 | 18.8 |
-| diffusion_wave_implicit_adi | water | 1.62 | 9.01 | 415 | 905 | 1.57e+03 | 2.48e+03 |
+| ca_game | water | 0.125 | 0.394 | 1.84 | 3.74 | 8.79 | 13.5 |
+| diffusion_wave_explicit | water | 0.235 | 0.851 | 3.38 | 6.85 | 14.4 | 17.4 |
+| diffusion_wave_implicit_adi | water | 1.62 | 9.01 | 415 | 905 | 1.45e+03 | 2.48e+03 |
 | diffusion_wave_implicit_cg | water | 30.4 | 141 | 869 | 3.32e+03 | 6.93e+03 | 9.64e+03 |
-| kinematic_wave | water | 0.18 | 0.721 | 3.04 | 7.92 | 14.5 | 19.5 |
-| local_inertial | water | 0.293 | 1.04 | 4.6 | 9.25 | 19.2 | 22.2 |
-| pipes | water | 0.317 | 1.15 | 4.93 | 11 | 21.1 | 30.9 |
-| swe_hll | water | 0.516 | 2.25 | 9.82 | 24.6 | 41.7 | 58 |
-| swe_lbm | water | 1.94 | 6.85 | 33.5 | 80.4 | 124 | 178 |
-| wca2d | water | 0.354 | 1.61 | 6.88 | 15.1 | 26.9 | 40.2 |
+| kinematic_wave | water | 0.179 | 0.644 | 3.01 | 7.5 | 14.5 | 17.9 |
+| local_inertial | water | 0.305 | 1.04 | 4.6 | 8.56 | 19.2 | 21.9 |
+| pipes | water | 0.317 | 1.15 | 4.93 | 9.27 | 21.1 | 26.8 |
+| swe_hll | water | 0.543 | 2.25 | 10.2 | 23.5 | 41.7 | 58 |
+| swe_lbm | water | 1.94 | 6.79 | 33.1 | 80.4 | 124 | 178 |
+| wca2d | water | 0.354 | 1.61 | 7.15 | 13.6 | 26.9 | 40.2 |
 | linear_wave | wave | 0.0667 | 0.234 | 0.762 | 3.95 | 3.47 | 4.58 |
 
 ### Largest fixed dt that survives 20 s of the 128 dam break (water) / gaussian / ripples
@@ -158,16 +158,16 @@ Reference swe_hll (matches Stoker's analytic dam break to 0.1%, tests/test_water
 | ocean_edge | swe_hll | 10.3 | 0.0777 | 1544 | 120 |  | 6.5e-03 | 3.0e-17 | 0.0e+00 | no | no |  |
 | ocean_edge | swe_lbm | 36.6 | 0.0388 | 1360 | 16.9 |  | 3.3e-01 | 4.8e-17 | 0.0e+00 | no | yes |  |
 | ocean_edge | wca2d | 6.58 | 0.251 | 823 | 120 |  | 3.0e+00 | 2.7e-17 | 0.0e+00 | no | no |  |
-| pit_dig | ca_game | 2.01 | 0.5 | 300 | 150 |  | 1.7e-02 | 6.6e-16 | 0.0e+00 | no | no |  |
-| pit_dig | diffusion_wave_explicit | 3.46 | 0.000223 | 9759 | 1.58 |  | 5.8e-02 | 1.0e-16 | 0.0e+00 | no | yes |  |
-| pit_dig | diffusion_wave_implicit_adi | 507 | 5 | 30 | 150 |  | 3.0e-02 | 2.7e-15 | 0.0e+00 | no | no |  |
-| pit_dig | diffusion_wave_implicit_cg | 820 | 5 | 30 | 150 |  | 4.9e-02 | 1.5e-16 | 0.0e+00 | no | no |  |
-| pit_dig | kinematic_wave | 3.04 | 0.115 | 1152 | 150 |  | 1.1e-03 | 3.8e-15 | 0.0e+00 | no | no |  |
-| pit_dig | local_inertial | 4.09 | 0.25 | 608 | 150 |  | 1.1e-01 | 5.5e-16 | 0.0e+00 | no | no |  |
-| pit_dig | pipes | 4.66 | 0.152 | 988 | 150 |  | 5.2e-02 | 6.2e-15 | 0.0e+00 | no | no |  |
-| pit_dig | swe_hll | 9.82 | 0.162 | 1044 | 150 |  | 3.5e-03 | 2.2e-16 | 0.0e+00 | no | no |  |
-| pit_dig | swe_lbm | 35.8 | 0.151 | 1488 | 39.2 |  | 1.3e-01 | 7.3e-17 | 0.0e+00 | no | yes |  |
-| pit_dig | wca2d | 6.88 | 0.184 | 1222 | 150 |  | 8.0e+00 | 2.6e-16 | 0.0e+00 | no | no |  |
+| pit_dig | ca_game | 1.94 | 0.5 | 300 | 150 |  | 1.7e-02 | 6.6e-16 | 0.0e+00 | no | no |  |
+| pit_dig | diffusion_wave_explicit | 3.07 | 0.000223 | 17907 | 2.9 |  | 3.0e-02 | 4.2e-16 | 0.0e+00 | no | yes |  |
+| pit_dig | diffusion_wave_implicit_adi | 453 | 5 | 30 | 150 |  | 1.5e-01 | 9.2e-16 | 0.0e+00 | no | no |  |
+| pit_dig | diffusion_wave_implicit_cg | 782 | 5 | 30 | 150 |  | 2.2e-01 | 4.4e-16 | 0.0e+00 | no | no |  |
+| pit_dig | kinematic_wave | 2.91 | 0.115 | 1152 | 150 |  | 1.1e-03 | 4.4e-15 | 0.0e+00 | no | no |  |
+| pit_dig | local_inertial | 4.57 | 0.25 | 570 | 150 |  | 5.7e-02 | 1.8e-16 | 0.0e+00 | no | no |  |
+| pit_dig | pipes | 4.57 | 0.152 | 988 | 150 |  | 2.5e-02 | 6.8e-15 | 0.0e+00 | no | no |  |
+| pit_dig | swe_hll | 12.1 | 0.162 | 1016 | 150 |  | 5.8e-03 | 1.1e-16 | 0.0e+00 | no | no |  |
+| pit_dig | swe_lbm | 33.1 | 0.151 | 2815 | 42.3 |  | 7.7e-02 | 1.3e-16 | 0.0e+00 | no | yes |  |
+| pit_dig | wca2d | 7.82 | 0.184 | 1222 | 150 |  | 8.0e+00 | 2.9e-16 | 0.0e+00 | no | no |  |
 | rain_groundwater | ca_game | 2.38 | 0.5 | 240 | 120 |  | 1.3e-02 | 7.6e-16 | 0.0e+00 | no | no |  |
 | rain_groundwater | diffusion_wave_explicit | 4.54 | 0.00217 | 9865 | 9.89 |  | 6.7e-02 | 3.2e-15 | 0.0e+00 | no | yes |  |
 | rain_groundwater | diffusion_wave_implicit_adi | 460 | 5 | 24 | 120 |  | 5.2e-02 | 5.9e-16 | 0.0e+00 | no | no |  |
