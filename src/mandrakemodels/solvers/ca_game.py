@@ -44,10 +44,13 @@ class GameCA(WaterSolver):
         hx, hy = self.face_flow_depth()
         # volume per pass: share of the level difference, capped at the face depth (water above the
         # higher bed); sign toward +x/+y is minus the difference
-        Fx = -np.sign(dEx) * np.minimum(np.abs(dEx) * self.share, hx) * A
-        Fy = -np.sign(dEy) * np.minimum(np.abs(dEy) * self.share, hy) * A
+        # A step shorter than a pass moves that fraction of a pass (compare.py clips dt to frame times; booking a
+        # whole pass per short step ran the CA 1.5x fast there). dt == pass_seconds is the original arithmetic.
+        share = self.share * min(dt / self.pass_seconds, 1.0)
+        Fx = -np.sign(dEx) * np.minimum(np.abs(dEx) * share, hx) * A
+        Fy = -np.sign(dEy) * np.minimum(np.abs(dEy) * share, hy) * A
         self.transfer(Fx, Fy)
-        self.record_flux(*self._last_F, self.pass_seconds)
+        self.record_flux(*self._last_F, dt)
 
 
 SOLVERS = (GameCA,)
