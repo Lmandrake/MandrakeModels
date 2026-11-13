@@ -1,0 +1,25 @@
+{
+ "n": 400,
+ "cells": 160000,
+ "numba": "0.68.1",
+ "basis": "median of 30 steps, single thread; numba kernels are plain loops of the same arithmetic",
+ "local_inertial": {
+  "numpy_ms": 15.521674999035895,
+  "numba_ms": 2.9104849963914603,
+  "ratio": 5.333020104305747,
+  "numba_ns_per_cell": 18.190531227446627
+ },
+ "pipes": {
+  "numpy_ms": 15.23649602313526,
+  "numba_ms": 0.38701097946614027,
+  "ratio": 39.36967381171755,
+  "numba_ns_per_cell": 2.4188186216633767
+ },
+ "heat_explicit": {
+  "numpy_ms": 0.6588560063391924,
+  "numba_ms": 0.07379500311799347,
+  "ratio": 8.92819267567106,
+  "numba_ns_per_cell": 0.4612187694874592
+ },
+ "ratio_median": 8.92819267567106
+}
