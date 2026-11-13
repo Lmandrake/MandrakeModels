@@ -235,7 +235,8 @@ def write(out: Path, curate: Path | None = None):
              "tick at the solver's own dt, with one simulated second per 60 ticks (sibling plan's assumption). "
              "No C# cost is projected from these: the numba probe's kernels are simplified solvers, so its ratio "
              "is not a C# projection; measured C# cost (local_inertial on Unity Mono) is in results/stagec.md. "
-             "Full-grid cost: no sleeping or active sets.", ""]
+             "Full-grid cost: no sleeping or active sets. Stage-2 review fixes, new competitors and what the "
+             "screen shows: results/stage2.md.", ""]
     if probe:
         parts += ["### numba unit cost probe (simplified kernels: NOT the bakeoff's arithmetic, not a C# projection)", "",
                   "| kernel | numpy ms/step | numba ms/step | ratio | numba ns/cell |", "|---|---|---|---|---|"]
