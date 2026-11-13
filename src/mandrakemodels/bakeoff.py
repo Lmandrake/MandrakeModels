@@ -263,8 +263,8 @@ def timing_run(solver, scene, n, steps, warm, max_wall):
         while events and s.t >= events[0][0] - 1e-9:
             _, meth, kw = events.pop(0)
             getattr(s, meth)(**kw)
+        a = time.perf_counter()        # stable_dt is part of the step's cost (wca2d, kinematic recompute velocities)
         dt = choose_dt(s, sc, events) if sc.kind != "water" else min(s.stable_dt(), WATER_DT_CAP)
-        a = time.perf_counter()
         s.step(dt)
         b = time.perf_counter() - a
         if i >= warm:
@@ -324,11 +324,11 @@ def survives(cls, kind, dt):
         ref = float(s.h.max())
     elif kind == "scalar":
         ref = float(s.snapshot()["field"].max())
-    steps = int(math.ceil(T / dt))
+    steps = int(math.ceil(T / dt - 1e-9))
     if steps > 40000:
         return None
-    for _ in range(steps):
-        s.step(dt)
+    for k in range(steps):
+        s.step(min(dt, T - k * dt))           # the last step is clipped: exactly T seconds are simulated
         if s.blown_up():
             return False
     snap = s.snapshot()
@@ -357,7 +357,7 @@ def max_dt(cls, kind, own=math.inf, lo=1e-3, hi_cap=64.0):
         t /= 2
     good, bad = t, None
     while t < hi_cap:
-        t *= 2
+        t = min(2 * t, hi_cap)
         r = survives(cls, kind, t)
         if r is None:
             break
@@ -436,6 +436,9 @@ def phase_accuracy(a):
     dam break to 0.1% (tests/test_water_main.py). A ratio far from 1 means wrong flood timing."""
     out = run_dir(a.run)
     res = {"scene": "dam_break", "n": 128, "T": 20.0, "reference": "swe_hll", "m3": {}}
+    if a.solvers and (out / "accuracy.json").exists():     # re-run only the named rows, keep the others
+        res = json.loads((out / "accuracy.json").read_text())
+        res.pop("ratio", None)
     for cls in sorted(REGISTRY.values(), key=lambda c: c.name):
         if cls.kind != "water" or (a.solvers and cls.name not in a.solvers):
             continue
