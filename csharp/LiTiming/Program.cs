@@ -48,6 +48,35 @@ namespace LiTiming
                         Console.WriteLine("steps " + ns + " wet " + m.WetCells(0) + " active_blocks " + m.ActiveBlocks);
                         return 0;
                     }
+                case "drift":
+                    {
+                        // lake-at-rest drift over time: max surface movement every 100 water-s
+                        var sc = SceneFile.Read(args[1]);
+                        double T = double.Parse(Opt(args, "--seconds", "10000"), Inv);
+                        var m = LocalInertialDL.FromScene(sc); m.WetOnly = Opt(args, "--modes", "wet") == "wet";
+                        bool pydt = Array.IndexOf(args, "--pydt") >= 0, ragged = Array.IndexOf(args, "--ragged") >= 0;
+                        var eta0 = Eta(m); double next = double.Parse(Opt(args, "--every", "100"), Inv), every = next;
+                        while (m.T < T - 1e-9)
+                        {
+                            if (pydt) m.Step(Math.Min(Math.Min(m.StableDt(), DtCap), next - m.T));
+                            else if (ragged)
+                            {
+                                // the old recompute split: stable steps then a short remainder (down to ~1e-9 s)
+                                double end = m.T + Recompute;
+                                while (m.T < end - 1e-9) m.Step(Math.Min(Math.Min(m.StableDt(), DtCap), end - m.T));
+                            }
+                            else Advance(m, null);
+                            if (m.T >= next - 1e-9)
+                            {
+                                var e = Eta(m); double mv = 0; int at = -1;
+                                for (int c = 0; c < e.Length; c++) if (m.V[c] > 0 && Math.Abs(e[c] - eta0[c]) > mv) { mv = Math.Abs(e[c] - eta0[c]); at = c; }
+                                string where = at < 0 ? "" : " at j=" + at / m.Nx + " i=" + at % m.Nx + " z=" + m.Z[at].ToString("F3", Inv) + " v=" + m.V[at] + " eta0=" + eta0[at].ToString("F4", Inv);
+                                Console.WriteLine("t=" + m.T.ToString("F1", Inv) + " max_move_m=" + mv.ToString("E3", Inv) + where + " books=" + m.BooksError + " limited=" + m.LimitedFaces);
+                                next += every;
+                            }
+                        }
+                        return 0;
+                    }
                 case "fuzz": return Fuzz(args[1], args[2], int.Parse(Opt(args, "--seqs", "1000")));
             }
             return 2;
@@ -169,12 +198,12 @@ namespace LiTiming
         static int Advance(LocalInertialDL m, Queue<(double t, bool[] mask, double[] depth)> digs)
         {
             while (digs != null && digs.Count > 0 && m.T >= digs.Peek().t - 1e-9) { var d = digs.Dequeue(); m.Dig(d.mask, d.depth); }
-            double end = m.T + Recompute; int k = 0;
-            while (m.T < end - 1e-9)
-            {
-                m.Step(Math.Min(Math.Min(m.StableDt(), DtCap), end - m.T));
-                k++;
-            }
+            // equal substeps: a recompute split as (stable, stable, short remainder) once left a 1e-8 s step whose
+            // rounded-up whole dL became a huge discharge memory (lake at rest moved 2.1 m in 20 s, 2026-11-13)
+            int k = (int)Math.Ceiling(Recompute / Math.Min(m.StableDt(), DtCap) - 1e-9);
+            if (k < 1) k = 1;
+            double dt = Recompute / k;
+            for (int s = 0; s < k; s++) m.Step(dt);
             return k;
         }
 
