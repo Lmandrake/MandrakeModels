@@ -110,3 +110,21 @@ def test_pit_dig_pit_actually_floods(name):
         assert volume > 5.0, f"{name}: pit holds {volume:.2f} m3 after {sc.duration:.0f} s"
     else:
         assert depth > 0.1, f"{name}: pit mean depth {depth:.3f} m after {sc.duration:.0f} s"
+
+
+@pytest.mark.parametrize("name", WATER)
+def test_moat_evap_shore_recedes(name):
+    """Evaporation must visibly dry the moat: its shallow west side goes dry while the deep east side keeps water."""
+    if name in PIT_TOO_SLOW:
+        pytest.skip(f"{name}: too slow to run the scene in a test")
+    cls = REGISTRY[name]
+    sc = scenes.build("moat_evap", 64)
+    J, I = np.mgrid[0:64, 0:64] / 64
+    moat = sc.init["h"] > 0
+    s = run(cls, sc, sc.duration, dt_cap=5.0)
+    if name in NOT_WELL_BALANCED:
+        pytest.xfail(f"{name}: runs down the bed to puddles, no level surface to recede")
+    west, east = moat & (I < 0.3), moat & (I > 0.7)
+    assert (s.h[west] < 0.01).mean() > 0.5, f"{name}: west moat still wet"
+    assert (s.h[east] > 0.05).mean() > 0.5, f"{name}: east moat dried too"
+    assert s.ledger.terms["evaporation"] < 0
