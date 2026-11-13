@@ -74,3 +74,39 @@ def test_dig_event_keeps_volume(name):
         getattr(s, meth)(**kw)
     s.step(min(s.stable_dt(), 0.5))
     assert abs(s.volume_error()) <= 1e-9 * max(s.ledger.throughput, s.V0)
+
+
+
+# Pit dig at 128 (the size where the old scene's sill kept every pit dry). Bars, measured 2026-11-12 on the fixed scene:
+# momentum and implicit solvers fill the pit to 0.17-0.77 m mean depth in 150 s; the two cellular automata spread one cell per
+# pass, so their front is late (ca_game 0.013 m, wca2d 0.076 m): for them the bar is only that the water arrives.
+PIT_SLOW_FRONT = {"ca_game", "wca2d"}
+# Too slow to run 150 simulated seconds at 128 inside a test (explicit diffusion: ~1e-4 s steps; CG: ~6 min wall). UNTESTED.
+PIT_TOO_SLOW = {"diffusion_wave_explicit", "diffusion_wave_implicit_cg"}
+
+
+@pytest.mark.parametrize("name", WATER)
+def test_pit_dig_pit_actually_floods(name):
+    """The dug canal must carry river water into the dug pit (the old scene's sill left every solver's pit dry)."""
+    if name in PIT_TOO_SLOW:
+        pytest.skip(f"{name}: too slow to run the scene at 128 in a test; its pit fill is untested")
+    cls = REGISTRY[name]
+    sc = scenes.build("pit_dig", 128)
+    pit = sc.events[0][2]["mask"]
+    s = cls.from_scene(sc)
+    events = sorted(sc.events, key=lambda e: e[0])
+    while s.t < sc.duration - 1e-9:
+        while events and s.t >= events[0][0] - 1e-9:
+            _, meth, kw = events.pop(0)
+            getattr(s, meth)(**kw)
+        nxt = events[0][0] - s.t if events else 1e9
+        s.step(max(min(s.stable_dt(), 5.0, sc.duration - s.t, nxt), 1e-6))
+        assert not s.blown_up(), f"{name} blew up at t={s.t}"
+    depth, volume = s.h[pit].mean(), s.h[pit].sum() * scenes.DX ** 2
+    if name in NOT_WELL_BALANCED:
+        pytest.xfail(f"{name}: no backwater, the river runs as a film down its bed and never turns into the canal "
+                     f"(pit {volume:.1f} m3)")
+    if name in PIT_SLOW_FRONT:
+        assert volume > 5.0, f"{name}: pit holds {volume:.2f} m3 after {sc.duration:.0f} s"
+    else:
+        assert depth > 0.1, f"{name}: pit mean depth {depth:.3f} m after {sc.duration:.0f} s"

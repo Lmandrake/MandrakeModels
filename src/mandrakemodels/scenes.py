@@ -134,15 +134,20 @@ def ocean_edge(n, seed=0):
 def pit_dig(n, seed=0):
     z, chan, w = _river_bed(n, seed, meander=0.0, center=0.35)
     J, I = np.mgrid[0:n, 0:n]
-    pit = (np.abs(J - 0.72 * n) < n * 0.12) & (np.abs(I - 0.5 * n) < n * 0.15)
-    canal = (np.abs(I - 0.5 * n) < max(2, w // 3)) & (J > 0.35 * n) & (J < 0.72 * n)
+    pit = (np.abs(J - 0.60 * n) < n * 0.08) & (np.abs(I - 0.5 * n) < n * 0.10)
+    canal = (np.abs(I - 0.5 * n) < max(2, w // 2)) & (J > 0.35 * n) & (J < 0.60 * n)
     inlet = chan & (I < 2)
     outlet = chan & (I >= n - 2)
     h = np.where(chan, 1.0 - (z - z.min(axis=0, keepdims=True)), 0.0)
     f = Forcing(sources=[Source(inlet, 0.6 * w * DX)], sinks=[Sink(outlet)])
-    zc = z.copy()
+    # The canal bed falls steadily from the river's own bed at the mouth to 0.3 m lower at the pit, so the river drains
+    # into it at any depth. (A fixed 2 m cut into a bank that climbs away from the river left a sill: the pit stayed dry.)
+    cut = canal & ~chan & ~pit
+    j0, j1 = J[cut].min(), J[cut].max()
+    mouth = float(z[chan & canal].min())
+    bed = mouth - 0.3 * (J - j0) / max(j1 - j0, 1)
     ev = [(5.0, "dig", {"mask": pit, "depth": 3.0}),
-          (15.0, "dig", {"mask": canal & (zc > 0.5), "depth": 2.0})]
+          (15.0, "dig", {"mask": cut, "depth": np.maximum(z[cut] - bed[cut], 0.0)})]
     return _water("pit_dig", n, 150.0, z, h, forcing=f, events=ev,
                   note="river; a 3 m pit dug at t=5 s, a canal from the river dug at t=15 s fills it")
 
