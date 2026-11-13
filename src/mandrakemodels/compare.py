@@ -58,9 +58,12 @@ STOP = (225, 120, 20)
 PLAIN = {
     "swe_hll": "shallow water equations (HLL finite volume)",
     "pipes": "virtual pipes",
+    "pipes_theta": "virtual pipes, theta-smoothed (visual only)",
     "ca_game": "game cellular automaton",
     "wca2d": "weighted cellular automaton (WCA2D)",
     "local_inertial": "local inertial (LISFLOOD-FP)",
+    "local_inertial_frcap": "local inertial, Froude cap 0.544 (weir)",
+    "local_inertial_frcap07": "local inertial, Froude cap 0.7",
     "kinematic_wave": "kinematic wave",
     "diffusion_wave_explicit": "diffusion wave, explicit",
     "diffusion_wave_implicit_cg": "diffusion wave, implicit (CG)",
