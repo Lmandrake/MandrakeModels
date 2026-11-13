@@ -17,18 +17,19 @@ Grid 400^2, median of 30 steps, single thread. The pipes kernel has no friction 
 | solver | ms/step numpy | dt s | numpy ms/tick | worst vol err | lake drift m | settled | blow-ups | errors | capped |
 |---|---|---|---|---|---|---|---|---|---|
 | ca_game | 3.58 | 0.5 | 0.119 | 3.1e-15 | 4.4e-16 | 1/9 | 0 | 0 | 0 |
-| diffusion_wave_explicit | 9.25 | 4.25e-05 | 3.63e+03 | 1.4e-15 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
+| diffusion_wave_explicit | 9.25 | 4.25e-05 | 3.63e+03 | 7.9e-16 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
 | diffusion_wave_implicit_adi | 905 | 5 | 3.02 | 6.9e-16 | 5.9e-11 | 1/9 | 0 | 0 | 0 |
 | diffusion_wave_implicit_cg | 2.77e+03 | 5 | 9.22 | 7.3e-16 | 2.2e-16 | 1/9 | 0 | 0 | 6 |
-| kinematic_wave | 8.05 | 0.0576 | 2.72 | 2.6e-15 | 1.0e+04 | 1/9 | 5 | 0 | 0 |
 | local_inertial | 8.27 | 0.192 | 0.744 | 2.6e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
 | local_inertial_frcap | 8.34 | 0.192 | 0.745 | 6.6e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
-| local_inertial_frcap07 | 8.02 | 0.192 | 0.747 | 3.3e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
+| local_inertial_frcap07 | 8.02 | 0.192 | 0.747 | 3.0e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
 | pipes | 9.46 | 0.152 | 1.04 | 6.7e-15 | 3.6e-15 | 1/9 | 0 | 0 | 0 |
 | pipes_theta | 10.3 | 0.152 | 1.14 | 6.7e-15 | 4.4e-16 | 1/9 | 0 | 0 | 0 |
 | swe_hll | 18.4 | 0.135 | 2.53 | 5.9e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
 | swe_lbm | 56 | 0.0965 | 14.6 | 4.5e-15 | 4.4e-16 | 1/9 | 0 | 0 | 7 |
 | wca2d | 15.6 | 0.251 | 1.62 | 3.3e-15 | 2.2e-16 | 1/9 | 0 | 0 | 0 |
+
+Left out: kinematic_wave (bed-slope only: no flat-bed flow, no backwater; blows up under level-setters).
 
 ### Water solvers at 500 x 500 (median over water scenes)
 
@@ -36,17 +37,18 @@ Grid 400^2, median of 30 steps, single thread. The pipes kernel has no friction 
 |---|---|---|---|---|---|---|---|---|---|
 | ca_game | 9.73 | 0.5 | 0.324 | 1.6e-15 | 4.4e-16 | 1/9 | 0 | 0 | 0 |
 | diffusion_wave_explicit | 24.9 | 4.25e-05 | 9.47e+03 | 1.8e-15 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
-| diffusion_wave_implicit_adi | 2.48e+03 | 5 | 8.27 | 4.1e-16 | 3.0e-11 | 1/9 | 0 | 0 | 5 |
+| diffusion_wave_implicit_adi | 2.48e+03 | 5 | 8.27 | 5.0e-16 | 3.0e-11 | 1/9 | 0 | 0 | 4 |
 | diffusion_wave_implicit_cg | 9.64e+03 | 5 | 32.1 | 2.6e-16 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
-| kinematic_wave | 21 | 0.0777 | 4.15 | 9.9e-16 | 1.0e+04 | 1/9 | 6 | 0 | 0 |
-| local_inertial | 20.5 | 0.192 | 1.65 | 6.3e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
+| local_inertial | 20.5 | 0.192 | 1.65 | 2.5e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
 | local_inertial_frcap | 20.4 | 0.192 | 1.64 | 4.7e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
-| local_inertial_frcap07 | 20.2 | 0.192 | 1.68 | 7.5e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
+| local_inertial_frcap07 | 20.2 | 0.192 | 1.68 | 6.2e-16 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
 | pipes | 23 | 0.152 | 2.53 | 6.7e-15 | 2.7e-15 | 1/9 | 0 | 0 | 0 |
 | pipes_theta | 26.1 | 0.152 | 2.86 | 6.7e-15 | 8.9e-16 | 1/9 | 0 | 0 | 0 |
-| swe_hll | 48.6 | 0.135 | 5.86 | 1.2e-15 | 8.9e-16 | 1/9 | 0 | 0 | 5 |
+| swe_hll | 48.6 | 0.135 | 5.86 | 1.2e-15 | 8.9e-16 | 1/9 | 0 | 0 | 4 |
 | swe_lbm | 140 | 0.118 | 19.8 | 1.6e-15 | 4.4e-16 | 0/9 | 0 | 0 | 9 |
 | wca2d | 38.3 | 0.254 | 2.55 | 1.8e-15 | 4.4e-16 | 1/9 | 0 | 0 | 1 |
+
+Left out: kinematic_wave (bed-slope only: no flat-bed flow, no backwater; blows up under level-setters).
 
 ### numpy ms/step by size (median over scenes; timing phase, sequential, one thread)
 
@@ -201,19 +203,19 @@ Reference swe_hll (matches Stoker's analytic dam break to 0.1%, tests/test_water
 | pit_dig | swe_hll | 8.24 | 0.162 | 1016 | 150 |  | 5.8e-03 | 1.1e-16 | 0.0e+00 | no | no |  |
 | pit_dig | swe_lbm | 27.7 | 0.151 | 2815 | 42.3 |  | 7.7e-02 | 1.3e-16 | 0.0e+00 | no | yes |  |
 | pit_dig | wca2d | 7.22 | 0.184 | 1222 | 150 |  | 8.0e+00 | 2.9e-16 | 0.0e+00 | no | no |  |
-| rain_groundwater | ca_game | 1.79 | 0.5 | 240 | 120 |  | 1.3e-02 | 7.6e-16 | 0.0e+00 | no | no |  |
-| rain_groundwater | diffusion_wave_explicit | 5.58 | 0.00217 | 9865 | 9.89 |  | 6.7e-02 | 3.2e-15 | 0.0e+00 | no | yes |  |
-| rain_groundwater | diffusion_wave_implicit_adi | 460 | 5 | 24 | 120 |  | 5.2e-02 | 5.9e-16 | 0.0e+00 | no | no |  |
-| rain_groundwater | diffusion_wave_implicit_cg | 1.18e+03 | 5 | 24 | 120 |  | 3.8e-02 | 4.5e-16 | 0.0e+00 | no | no |  |
-| rain_groundwater | kinematic_wave | 4.3 | 0.165 | 2246 | 120 |  | 7.2e+01 | 5.9e-16 | 0.0e+00 | no | no |  |
+| rain_groundwater | ca_game | 1.79 | 0.5 | 240 | 120 |  | 1.4e-02 | 1.1e-15 | 0.0e+00 | no | no |  |
+| rain_groundwater | diffusion_wave_explicit | 5.58 | 0.00217 | 13017 | 10.7 |  | 6.0e-02 | 3.4e-15 | 0.0e+00 | no | yes |  |
+| rain_groundwater | diffusion_wave_implicit_adi | 460 | 5 | 24 | 120 |  | 6.3e-02 | 4.2e-16 | 0.0e+00 | no | no |  |
+| rain_groundwater | diffusion_wave_implicit_cg | 1.18e+03 | 5 | 24 | 120 |  | 2.8e-02 | 0.0e+00 | 0.0e+00 | no | no |  |
+| rain_groundwater | kinematic_wave | 4.3 | 0.165 | 2246 | 120 |  | 7.2e+01 | 2.9e-16 | 0.0e+00 | no | no |  |
 | rain_groundwater | local_inertial | 4.37 | 0.36 | 510 | 120 |  | 2.2e-02 | 2.8e-16 | 0.0e+00 | no | no |  |
 | rain_groundwater | local_inertial_frcap | 4.57 | 0.361 | 504 | 120 |  | 8.1e-03 | 5.4e-16 | 0.0e+00 | no | no |  |
-| rain_groundwater | local_inertial_frcap07 | 4.66 | 0.36 | 507 | 120 |  | 8.3e-03 | 8.3e-16 | 0.0e+00 | no | no |  |
-| rain_groundwater | pipes | 4.92 | 0.152 | 791 | 120 |  | 9.5e-03 | 1.2e-15 | 0.0e+00 | no | no |  |
-| rain_groundwater | pipes_theta | 5.24 | 0.152 | 791 | 120 |  | 1.0e-02 | 9.3e-16 | 0.0e+00 | no | no |  |
+| rain_groundwater | local_inertial_frcap07 | 4.66 | 0.36 | 507 | 120 |  | 8.6e-03 | 5.5e-16 | 0.0e+00 | no | no |  |
+| rain_groundwater | pipes | 4.92 | 0.152 | 791 | 120 |  | 8.9e-03 | 1.7e-15 | 0.0e+00 | no | no |  |
+| rain_groundwater | pipes_theta | 5.24 | 0.152 | 791 | 120 |  | 9.8e-03 | 3.1e-16 | 0.0e+00 | no | no |  |
 | rain_groundwater | swe_hll | 9.12 | 0.247 | 710 | 120 |  | 7.9e-03 | 5.6e-16 | 0.0e+00 | no | no |  |
-| rain_groundwater | swe_lbm | 28.3 | 0.191 | 1868 | 36 |  | 1.4e-02 | 3.1e-16 | 0.0e+00 | no | yes |  |
-| rain_groundwater | wca2d | 8.38 | 0.415 | 508 | 120 |  | 2.6e-02 | 6.4e-16 | 0.0e+00 | no | no |  |
+| rain_groundwater | swe_lbm | 28.3 | 0.191 | 2171 | 36.6 |  | 1.2e-02 | 7.6e-16 | 0.0e+00 | no | yes |  |
+| rain_groundwater | wca2d | 8.38 | 0.415 | 509 | 120 |  | 1.7e-01 | 9.0e-16 | 0.0e+00 | no | no |  |
 | ripples | linear_wave | 0.762 | 0.0636 | 315 | 20 |  |  |  |  | no | no |  |
 | river | ca_game | 1.83 | 0.5 | 240 | 120 |  | 2.0e-02 | 1.1e-15 | 0.0e+00 | no | no |  |
 | river | diffusion_wave_explicit | 4.89 | 0.000199 | 10374 | 2.81 |  | 2.8e-02 | 1.7e-16 | 0.0e+00 | no | yes |  |
