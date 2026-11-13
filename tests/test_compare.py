@@ -21,8 +21,12 @@ def test_identical_start_and_outputs(tmp_path):
     sc = scenes.build("dam_break", 24)
     assert np.array_equal(init["h"], sc.init["h"]) and np.array_equal(init["z"], sc.init["z"])
     assert (d / "state.gif").exists() and (d / "diff.gif").exists()
-    html = (tmp_path / "compare.html").read_text()
-    assert "dam_break" in html and "data:image/webp;base64" in html
+    assert (d / "state.webm").exists() and (d / "poster.webp").exists()
+    assert len(list(d.glob("dam_break_24_state_t*.jpg"))) >= 3
+    index = (tmp_path / "index.html").read_text()
+    assert "dam_break_24.html" in index                       # index links the scene page
+    page = (tmp_path / "dam_break_24.html").read_text()
+    assert "GkXf" in page                                     # embedded webm (EBML magic, base64)
 
 
 def test_user_grid_from_npy(tmp_path):

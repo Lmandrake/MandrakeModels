@@ -83,7 +83,17 @@ uv run python -m mandrakemodels.compare --bed my_bed.npy --depth my_depth.npy --
 ```
 
 One initial grid is built once and copied to every solver; each runs on its own stable time step and
-is sampled at common times. Output: `compare/<scene>_<n>/` (state and difference GIFs, MP4, frames)
-under the output root, and `compare/compare.html`, a self-contained player (scene picker, play/pause,
-time slider, state/difference toggle) that works from `file://`. A blown-up, failed or wall-capped
-solver keeps its tile with a red label.
+is sampled at common times (120 frames by default, over the active part of the event), so every tile
+shows the same simulated moment. Water is drawn as water (`waterview.py`): the bed as shaded relief
+in earth tones, water in blues that darken with depth, the water surface lit from the north-west so
+wave fronts and bores show as light and dark bands, a pale shoreline, walls as dark stone. One look
+(terrain range, depth scale, shading gain) per scene, taken from the reference run. Dam break and
+swell get a side-view strip of the water surface along the row marked with yellow triangles.
+
+Output under the output root: `compare/index.html` (water scenes first, other physics after) and one
+self-contained page per scene, `compare/<scene>_<n>.html` (play/pause, frame step, time slider, speed,
+"what the water does" / "difference from reference" toggle, results table); both work from `file://`.
+`compare/<scene>_<n>/` holds `state.mp4`, `state.webm`/`diff.webm`, small GIFs, three stills,
+`init.npz` (the exact starting grid) and `meta.json`; the stills are also copied to `compare/stills/`.
+A solver that blew up, crashed or hit the wall-time cap keeps its tile, frozen at its last good frame,
+under a red (blew up) or orange (stopped) banner.
