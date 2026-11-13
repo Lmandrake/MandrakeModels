@@ -156,12 +156,14 @@ def moat_evap(n, seed=0):
     J, I = np.mgrid[0:n, 0:n] / n
     r = np.maximum(np.abs(J - 0.5), np.abs(I - 0.5))
     moat = (r > 0.25) & (r < 0.33)
-    z = np.where(moat, -1.0, 1.0) + 0.1 * smooth_noise(n, scale=0.05, seed=seed)
+    # The moat floor tilts 0.8 m from west to east, so as the level falls the shallow west side goes dry first and the
+    # receding shore is visible; a flat floor only got uniformly paler.
+    z = np.where(moat, -1.0 - 0.8 * I, 1.0) + 0.1 * smooth_noise(n, scale=0.05, seed=seed)
     h = np.where(moat, 0.5 - z, 0.0)
     h = np.maximum(h, 0)
-    f = Forcing(evaporation=2e-3)
+    f = Forcing(evaporation=1.5e-2)
     return _water("moat_evap", n, 120.0, z, h, forcing=f,
-                  note="closed square moat, evaporation 2 mm/s (exaggerated so it shows in a short run)")
+                  note="closed square moat on a tilted floor, evaporation 15 mm/s (hugely exaggerated so it dries in a short run)")
 
 
 def rain_groundwater(n, seed=0):
