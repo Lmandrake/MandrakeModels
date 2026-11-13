@@ -198,7 +198,6 @@ namespace LiTiming
 
             if (Profile) pt = Mark(2, pt);
             // pass 3: move whole dL once per face, opposite signs; store discharge memory
-            double qPerDl = 1.0 / toDl;
             long limited = 0;
             for (int a = 0; a < nActive; a++)
             {
@@ -222,7 +221,9 @@ namespace LiTiming
                                     int mag = fi > 0 ? fi : -fi;
                                     int cut = (int)((long)mag * lim[d] / outf[d]);
                                     fi = fi > 0 ? cut : -cut;
-                                    nq = fi * qPerDl; rx[f] = 0; limited++;
+                                    // memory scaled with the cut, as the float limiter does; never fi/(dx dt), which a
+                                    // whole dL rounded up from a short step turns into a huge discharge
+                                    nq *= (double)cut / mag; rx[f] = 0; limited++;
                                 }
                                 v[c] -= fi; v[c + 1] += fi;
                             }
@@ -240,7 +241,9 @@ namespace LiTiming
                                     int mag = fi > 0 ? fi : -fi;
                                     int cut = (int)((long)mag * lim[d] / outf[d]);
                                     fi = fi > 0 ? cut : -cut;
-                                    nq = fi * qPerDl; ry[f] = 0; limited++;
+                                    // memory scaled with the cut, as the float limiter does; never fi/(dx dt), which a
+                                    // whole dL rounded up from a short step turns into a huge discharge
+                                    nq *= (double)cut / mag; ry[f] = 0; limited++;
                                 }
                                 v[c] -= fi; v[c + nx] += fi;
                             }
