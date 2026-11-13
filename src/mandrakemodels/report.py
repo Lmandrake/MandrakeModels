@@ -81,11 +81,16 @@ CSV_FIELDS = ["solver", "scene", "n", "kind", "ms_per_step", "dt_mean", "py_ms_p
               "still_drift_m", "max_speed", "max_dt_dam128"]
 
 
+# Out of the water headline (stage-2 review): bed-slope only, so no flow on a flat bed, no backwater, and water piles
+# under a level-setter until it blows up. Its rows stay in results.csv and the per-run table.
+RETIRED_WATER = {"kinematic_wave": "bed-slope only: no flat-bed flow, no backwater; blows up under level-setters"}
+
+
 def headline(rows, n):
-    """Per water solver at size n: median over water scenes."""
+    """Per water solver at size n: median over water scenes (retired solvers left out)."""
     by = {}
     for r in rows:
-        if r["n"] == n and r["kind"] == "water":
+        if r["n"] == n and r["kind"] == "water" and r["solver"] not in RETIRED_WATER:
             by.setdefault(r["solver"], []).append(r)
     out = []
     for s, rs in sorted(by.items()):
@@ -117,6 +122,7 @@ def md_headline(h, n):
             solver=r["solver"], ms=_f(r["ms_per_step"]), dt=_f(r["dt"]), pt=_f(r["py_tick"]), vol=_f(r["vol"], "{:.1e}"),
             drift=_f(r["drift"], "{:.1e}"), st=r["settled"], ran=r["ran"], bl=r["blow"], er=r["err"],
             cp=r["capped"]))
+    L += ["", "Left out: " + "; ".join(f"{k} ({v})" for k, v in RETIRED_WATER.items()) + "."]
     return "\n".join(L)
 
 
