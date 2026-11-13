@@ -16,7 +16,7 @@ class VirtualPipes(WaterSolver):
     (pipes only push out), and all four outflows are scaled by ``K = min(1, V / (dt * sum f))`` so a
     cell never gives more than it holds (Mei 2007). The outflow memory gives momentum, so it sloshes,
     makes waves and can climb a little uphill. An optional semi-implicit Manning friction (using the
-    donor depth) damps it; with ``manning=0`` it rings for a long time. Volume moves through the shared
+    Bates face depth) damps it; with ``manning=0`` it rings for a long time. Volume moves through the shared
     transfer, so it is exact.
 
     Cannot do: the pipe cross-section does not depend on depth, so a 1 cm film and a 3 m channel
@@ -41,6 +41,8 @@ class VirtualPipes(WaterSolver):
     def stable_dt(self) -> float:
         return self.alpha * math.sqrt(self.grid.dx / G)
 
+    dry_gate_always = False     # True: zero a pipe over a dry face even when manning == 0
+
     def _step(self, dt):
         dx, A = self.grid.dx, self.grid.area
         dEx, dEy = self.face_surface_diff()           # eta[right] - eta[left]
@@ -58,6 +60,9 @@ class VirtualPipes(WaterSolver):
                     u = f / (dx * hs)
                     return np.where(hf > 1e-4, f / (1 + dt * G * n2 * u / hs ** (4 / 3)), 0.0)
                 fr, fl, fu, fd = fric(fr, hx), fric(fl, hx), fric(fu, hy), fric(fd, hy)
+        elif self.dry_gate_always:
+            fr, fl = np.where(hx > 1e-4, fr, 0.0), np.where(hx > 1e-4, fl, 0.0)
+            fu, fd = np.where(hy > 1e-4, fu, 0.0), np.where(hy > 1e-4, fd, 0.0)
         fr = np.where(self.open_x, fr, 0.0)
         fl = np.where(self.open_x, fl, 0.0)
         fu = np.where(self.open_y, fu, 0.0)
@@ -82,4 +87,38 @@ class VirtualPipes(WaterSolver):
         self.record_flux(Fx, Fy, dt)
 
 
-SOLVERS = (VirtualPipes,)
+class PipesTheta(VirtualPipes):
+    """Virtual pipes with each one-way pipe memory theta-smoothed along its own axis before the pressure update
+    (the de Almeida 2012 weighting applied to pipes, theta 0.8), and the dry-face gate applied even when
+    manning == 0. Visual only: hydraulics as pipes.
+
+    Why: plain pipes have no short-wavelength damping, so a draining lake keeps a checkerboard that never
+    settles (stage-1 probe: lake roughness 1.8e-3 m, 70x smoother with theta). Cannot do: everything pipes
+    cannot (depth-independent pipe area: thin sheets run ~9x too fast, floods early); the smoothing also damps
+    swell (lee swell 0.030 to 0.017 m in the probe).
+    """
+
+    name = "pipes_theta"
+    family = "virtual pipes (graphics)"
+    dry_gate_always = True
+
+    def __init__(self, *a, theta=0.8, **kw):
+        super().__init__(*a, **kw)
+        self.theta = theta
+
+    def _step(self, dt):
+        th = self.theta
+
+        def sx(f):
+            p = np.pad(f, ((0, 0), (1, 1)))
+            return th * f + 0.5 * (1 - th) * (p[:, :-2] + p[:, 2:])
+
+        def sy(f):
+            p = np.pad(f, ((1, 1), (0, 0)))
+            return th * f + 0.5 * (1 - th) * (p[:-2, :] + p[2:, :])
+        self.f_r, self.f_l = sx(self.f_r), sx(self.f_l)
+        self.f_u, self.f_d = sy(self.f_u), sy(self.f_d)
+        super()._step(dt)
+
+
+SOLVERS = (VirtualPipes, PipesTheta)
