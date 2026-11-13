@@ -1,4 +1,8 @@
-"""Heat / diffusion of a scalar on a cell grid: explicit FTCS and Peaceman-Rachford ADI."""
+"""Heat / diffusion of a scalar on a cell grid: explicit FTCS and Peaceman-Rachford ADI.
+
+Sources: FTCS (forward time, centred space), e.g. Press et al. Numerical Recipes ch. 20; ADI of
+Peaceman & Rachford (1955), J. SIAM 3; tridiagonal Thomas algorithm (Thomas 1949). Own implementation.
+"""
 from __future__ import annotations
 
 import math

@@ -7,6 +7,8 @@ dependencies = ["numpy>=1.26", "scipy>=1.11", "pillow>=10", "matplotlib>=3.8"]
 
 [project.optional-dependencies]
 fast = ["numba>=0.59"]
+# open-source cross-checks (MIT); see external.py. Not core.
+crosscheck = ["landlab>=2.9", "phiflow>=3.0", "anuga>=4.1", "mpich>=4"]
 
 [dependency-groups]
 dev = ["pytest>=8"]

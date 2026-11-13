@@ -1,4 +1,10 @@
-"""Implicit diffusion-wave solvers (backward Euler on the surface, conservative corrector)."""
+"""Implicit diffusion-wave solvers (backward Euler on the surface, conservative corrector).
+
+Sources: implicit diffusion-wave overland flow (e.g. Bates & De Roo 2000 discuss the explicit limit;
+implicit Picard/Newton forms as in Panday & Huyakorn 2004 / ParFlow's overland module, Kollet & Maxwell
+2006). Solvers: scipy conjugate gradient (Hestenes & Stiefel 1952) and Peaceman-Rachford ADI (1955).
+Own implementation.
+"""
 from __future__ import annotations
 
 import math

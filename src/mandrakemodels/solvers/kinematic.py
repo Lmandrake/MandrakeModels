@@ -1,4 +1,8 @@
-"""Kinematic wave: flow down the bed slope."""
+"""Kinematic wave: flow down the bed slope.
+
+Sources: kinematic wave of Lighthill & Whitham (1955), Proc. R. Soc. A 229; Manning friction; 2-D
+overland form as in Singh (1996) "Kinematic Wave Modeling in Water Resources". Own implementation.
+"""
 from __future__ import annotations
 
 import numpy as np

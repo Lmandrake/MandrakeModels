@@ -1,4 +1,8 @@
-"""Linear scalar wave equation (leapfrog / Verlet) on a cell grid."""
+"""Linear scalar wave equation (leapfrog / Verlet) on a cell grid.
+
+Sources: second-order wave equation, leapfrog / Stormer-Verlet time stepping (Hairer, Lubich & Wanner
+2003, Acta Numerica 12); CFL limit c dt/dx <= 1/sqrt(2) in 2-D. Own implementation.
+"""
 from __future__ import annotations
 
 import math
