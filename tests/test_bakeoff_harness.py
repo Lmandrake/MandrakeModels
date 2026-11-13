@@ -41,3 +41,16 @@ def test_maxdt_survival_run_stops_at_T(monkeypatch):
 
     bakeoff.survives(Spy, "water", 7.0)
     assert math.isclose(sum(seen), bakeoff.MAXDT_SCENE["water"][2], rel_tol=1e-9), sum(seen)
+
+
+def test_report_projects_no_csharp_cost_from_the_simplified_numba_probe(tmp_path):
+    """The numba probe's kernels are different solvers (pipes without friction), so no C# ms/tick is derived."""
+    import json
+    from mandrakemodels import report
+    (tmp_path / "probe.json").write_text(json.dumps({"n": 32, "pipes": {"numpy_ms": 1.0, "numba_ms": 0.1, "ratio": 10.0,
+                                                                         "numba_ns_per_cell": 1.0}}))
+    (tmp_path / "timing.jsonl").write_text(json.dumps(dict(solver="pipes", scene="river", n=325, kind="water",
+                                                           ms_per_step=9.0, dt_mean=0.15, py_ms_per_tick=1.0)) + "\n")
+    rows, _, _ = report.merged(tmp_path)
+    assert not any(k.startswith("cs_") for k in rows[0]), rows[0]
+    assert "C# ms/tick guess" not in report.md_headline(report.headline(rows, 325), 325)

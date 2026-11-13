@@ -13,8 +13,6 @@ from PIL import Image, ImageDraw
 
 from . import scenes
 
-MONO_LO, MONO_HI = 1.5, 4.0      # guess: Unity Mono JIT is 1.5-4x slower than numba/LLVM on one loop
-BAR_TICK_MS = 0.5                # sibling plan's bar: projected C# under 0.5 ms/tick on a realistic map
 STRESS_TICK_MS = 2.0
 
 
@@ -61,15 +59,9 @@ def merged(out: Path):
         r["ms_per_step"] = b.get("ms_per_step")
         r["dt_mean"] = b.get("dt_mean")
         r["py_ms_per_tick"] = b.get("py_ms_per_tick")
-        ratio, basis = None, ""
-        if isinstance(probe.get(solver), dict):
-            ratio, basis = probe[solver]["ratio"], "probe"
-        elif probe.get("ratio_median"):
-            ratio, basis = probe["ratio_median"], "median"
-        if r["py_ms_per_tick"] is not None and ratio:
-            r["cs_ms_per_tick_lo"] = r["py_ms_per_tick"] / ratio * MONO_LO
-            r["cs_ms_per_tick_hi"] = r["py_ms_per_tick"] / ratio * MONO_HI
-            r["cs_basis"] = basis
+        # No C# projection from the numba probe: its kernels are simplified solvers (pipes without friction,
+        # local_inertial without theta weighting), so their numpy/numba ratio prices different arithmetic.
+        # Measured C# cost: results/stagec.md.
         for f in ("final_rate", "steps", "t_end", "capped", "blew_up", "blow_t", "error", "settled", "settle_t",
                   "settle_steps", "vol_err_rel", "min_h", "max_h", "wet_frac", "still_drift_m",
                   "max_speed", "gif"):
@@ -84,8 +76,7 @@ def merged(out: Path):
     return rows, md, probe
 
 
-CSV_FIELDS = ["solver", "scene", "n", "kind", "ms_per_step", "dt_mean", "py_ms_per_tick", "cs_ms_per_tick_lo",
-              "cs_ms_per_tick_hi", "cs_basis", "steps", "t_end", "capped", "blew_up", "blow_t", "error",
+CSV_FIELDS = ["solver", "scene", "n", "kind", "ms_per_step", "dt_mean", "py_ms_per_tick", "steps", "t_end", "capped", "blew_up", "blow_t", "error",
               "settled", "settle_t", "settle_steps", "final_rate", "vol_err_rel", "min_h", "max_h", "wet_frac",
               "still_drift_m", "max_speed", "max_dt_dam128"]
 
@@ -106,8 +97,7 @@ def headline(rows, n):
             return max(v) if v else None
         out.append(dict(
             solver=s, scenes=len(rs), ms_per_step=med("ms_per_step"), dt=med("dt_mean"),
-            py_tick=med("py_ms_per_tick"), cs_lo=med("cs_ms_per_tick_lo"), cs_hi=med("cs_ms_per_tick_hi"),
-            cs_hi_max=mx("cs_ms_per_tick_hi"), vol=mx("vol_err_rel"),
+            py_tick=med("py_ms_per_tick"), vol=mx("vol_err_rel"),
             blow=sum(1 for r in rs if r.get("blew_up") or r.get("blew_up_timing")),
             err=sum(1 for r in rs if r.get("error")),
             settled=sum(1 for r in rs if r.get("settled")),
@@ -119,16 +109,12 @@ def headline(rows, n):
 
 def md_headline(h, n):
     L = [f"### Water solvers at {n} x {n} (median over water scenes)", "",
-         "| solver | ms/step numpy | dt s | numpy ms/tick | C# ms/tick guess | fits 0.5 ms/tick | worst vol err | "
+         "| solver | ms/step numpy | dt s | numpy ms/tick | worst vol err | "
          "lake drift m | settled | blow-ups | errors | capped |",
-         "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+         "|---|---|---|---|---|---|---|---|---|---|"]
     for r in h:
-        fits = ""
-        if r["cs_hi"] is not None:
-            fits = "yes" if r["cs_hi"] < BAR_TICK_MS else ("maybe" if r["cs_lo"] < BAR_TICK_MS else "no")
-        L.append("| {solver} | {ms} | {dt} | {pt} | {lo}-{hi} | {fits} | {vol} | {drift} | {st}/{ran} | {bl} | {er} | {cp} |".format(
-            solver=r["solver"], ms=_f(r["ms_per_step"]), dt=_f(r["dt"]), pt=_f(r["py_tick"]),
-            lo=_f(r["cs_lo"], "{:.2g}"), hi=_f(r["cs_hi"], "{:.2g}"), fits=fits, vol=_f(r["vol"], "{:.1e}"),
+        L.append("| {solver} | {ms} | {dt} | {pt} | {vol} | {drift} | {st}/{ran} | {bl} | {er} | {cp} |".format(
+            solver=r["solver"], ms=_f(r["ms_per_step"]), dt=_f(r["dt"]), pt=_f(r["py_tick"]), vol=_f(r["vol"], "{:.1e}"),
             drift=_f(r["drift"], "{:.1e}"), st=r["settled"], ran=r["ran"], bl=r["blow"], er=r["err"],
             cp=r["capped"]))
     return "\n".join(L)
@@ -239,18 +225,20 @@ def write(out: Path, curate: Path | None = None):
     sizes = sorted({r["n"] for r in rows})
     big = max((r["n"] for r in rows if r.get("ms_per_step") is not None), default=None)
     parts = ["# Fluid solver bakeoff: results", "",
-             "Tags: every number here is [measured] by this harness unless the column says guess. "
-             "C# ms/tick is a GUESS: numpy ms/step / (numpy/numba ratio from the probe, or the probes' median "
-             f"where marked) x Mono factor {MONO_LO}-{MONO_HI} [guess], x steps per tick at the solver's own dt, "
-             "with one simulated second per 60 ticks (sibling plan's assumption). Full-grid cost: no sleeping or "
-             "active sets, so a real C# port with sleeping cells costs less on mostly dry or settled maps.", ""]
+             "Tags: every number here is [measured] by this harness. numpy ms/tick = numpy ms/step x steps per "
+             "tick at the solver's own dt, with one simulated second per 60 ticks (sibling plan's assumption). "
+             "No C# cost is projected from these: the numba probe's kernels are simplified solvers, so its ratio "
+             "is not a C# projection; measured C# cost (local_inertial on Unity Mono) is in results/stagec.md. "
+             "Full-grid cost: no sleeping or active sets.", ""]
     if probe:
-        parts += ["### Compiled unit cost probe (numba, single thread)", "",
+        parts += ["### numba unit cost probe (simplified kernels: NOT the bakeoff's arithmetic, not a C# projection)", "",
                   "| kernel | numpy ms/step | numba ms/step | ratio | numba ns/cell |", "|---|---|---|---|---|"]
         for k, v in probe.items():
             if isinstance(v, dict):
                 parts.append(f"| {k} | {v['numpy_ms']:.2f} | {v['numba_ms']:.2f} | {v['ratio']:.1f} | {v['numba_ns_per_cell']:.1f} |")
-        parts += ["", f"Grid {probe.get('n')}^2, {probe.get('basis', '')}.", ""]
+        parts += ["", f"Grid {probe.get('n')}^2, median of 30 steps, single thread. The pipes kernel has no "
+                  "friction and the local_inertial kernel has no theta weighting or coupled-|q| friction "
+                  "(probe_numba.py), so these ratios compare different solvers.", ""]
     for n in (325, big):
         if n in sizes:
             parts += [md_headline(headline(rows, n), n), ""]

@@ -1,10 +1,11 @@
 """Compiled unit cost: plain-loop numba kernels of three solvers, timed beside their numpy versions.
 
-The ratio numpy/numba per solver is the basis for the bakeoff's C# guess: C# (Unity Mono JIT) is
-assumed 1.5-4x slower than numba/LLVM on the same scalar loop [guess, no C# measured]. The kernels do
-the same arithmetic per cell as the numpy solvers (local inertial face update plus conservative
-divergence with a donor clamp; virtual pipes outflow update plus Mei scaling; 5-point FTCS heat), single
-thread, float64.
+The kernels are SIMPLIFIED solvers, not the numpy arithmetic: the pipes kernel has no friction and the
+local inertial kernel has no theta weighting or coupled-|q| friction (stage-2 review, 2026-11-13). Their
+numpy/numba ratio therefore prices different arithmetic and is no basis for a C# cost; the report no
+longer projects one (measured C#: results/stagec.md). Kernels: local inertial face update plus
+conservative divergence with a donor clamp; virtual pipes outflow update plus Mei scaling; 5-point FTCS
+heat; single thread, float64.
 """
 from __future__ import annotations
 
@@ -126,7 +127,7 @@ def run(n: int = 400, reps: int = 30) -> dict:
     sc = scenes.build("river", n)
     cells = n * n
     res = {"n": n, "cells": cells, "numba": numba.__version__, "basis":
-           "median of %d steps, single thread; numba kernels are plain loops of the same arithmetic" % reps}
+           "median of %d steps, single thread; numba kernels are SIMPLIFIED (pipes: no friction; local inertial: no theta, no coupled friction)" % reps}
     z = sc.init["z"].astype(np.float64)
     h0 = sc.init["h"].astype(np.float64) + 0.2
     dx = sc.grid.dx
