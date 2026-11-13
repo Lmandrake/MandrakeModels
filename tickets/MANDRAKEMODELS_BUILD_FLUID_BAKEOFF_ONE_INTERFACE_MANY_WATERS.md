@@ -33,3 +33,9 @@ check: "{\"reason\":\"bakeoff results table and gallery not yet produced\",\"rev
 NEXT, in order: fix pit_dig; render rain_groundwater, swell, lake_at_rest, then other physics, one at a
   time (run1.sh in D:\ClaudeWork\mandrakemodels); look at moat + 3 more; optional dam_break n=250
   showcase; replace results/compare/*_64 with the new meta.json + stills; owner looks at index.html.
+- 2026-11-12 bench/detached (RIMMANDRAKE_SWEEP_WATER_SOLVERS_ON_BIG_MAPS): pit_dig fixed (canal bed falls from the river bed
+  to a smaller, nearer pit; 03ba39e) and moat_evap made to dry visibly (tilted floor, 15 mm/s; fad3ee1), each with a test
+  that fails on the old scene (7/7) and passes now; pit_dig and moat_evap bakeoff rows re-run (6840ddf and this commit);
+  rendered at 128 and looked at: all nine water scenes (index.html now lists them). Notes:
+  D:\ClaudeWork\rimmandrake\conductor\water_models_20261112\LOOKED.md. Still owed: other-physics pages, PhiFlow
+  adapter at 64, pylbm adapter, idle re-time, C# measurement.
