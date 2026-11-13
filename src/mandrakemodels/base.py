@@ -87,9 +87,11 @@ class Solver:
 class Ledger:
     """External volume (m^3) booked by kind. ``net`` is in minus out."""
     terms: dict = field(default_factory=dict)
+    gross: float = 0.0          # sum of |every booking|, so an in/out exchange does not cancel
 
     def book(self, kind: str, vol: float) -> None:
         self.terms[kind] = self.terms.get(kind, 0.0) + float(vol)
+        self.gross += abs(float(vol))
 
     @property
     def net(self) -> float:
@@ -97,7 +99,7 @@ class Ledger:
 
     @property
     def throughput(self) -> float:
-        return sum(abs(v) for v in self.terms.values())
+        return self.gross
 
 
 @dataclass
@@ -252,7 +254,7 @@ class WaterSolver(Solver):
                 q = _val(s.Q, t) * dt
                 self.h[m] += q / (A * n)
                 self.ledger.book("source", q)
-        r = _val(f.rain, t)
+        r = _val(f.rain, self.t + 0.5 * dt)      # midpoint: an end-time sample gave the step ending at a cutoff none
         if r:
             self.h[o] += r * dt
             self.ledger.book("rain", r * dt * A * o.sum())
@@ -275,7 +277,9 @@ class WaterSolver(Solver):
         for lv in f.levels:
             m = lv.mask & o
             target = np.maximum(_val(lv.level, t) - self.z[m], 0.0)
-            self.ledger.book("level", (target - self.h[m]).sum() * A)
+            d = (target - self.h[m]) * A
+            self.ledger.book("level", d[d > 0].sum())        # in and out booked apart (both count as throughput)
+            self.ledger.book("level", d[d < 0].sum())
             self.h[m] = target
         self.min_h_seen = min(self.min_h_seen, float(self.h.min()))
 
