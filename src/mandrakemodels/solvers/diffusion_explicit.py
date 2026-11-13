@@ -1,4 +1,9 @@
-"""Explicit diffusion-wave (zero-inertia) shallow water."""
+"""Explicit diffusion-wave (zero-inertia) shallow water.
+
+Sources: zero-inertia / diffusion wave of Hromadka & Yen (1986); the explicit 2-D raster form and its
+quadratic time-step limit, and the slope floor, follow Hunter, Horritt, Bates, Wilson & Werner (2005),
+Adv. Water Resour. 28. Own implementation.
+"""
 from __future__ import annotations
 
 import numpy as np

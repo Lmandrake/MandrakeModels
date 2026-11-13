@@ -1,4 +1,9 @@
-"""Lattice Boltzmann D2Q9 (BGK / TRT) incompressible flow with bounce-back obstacles and passive dye."""
+"""Lattice Boltzmann D2Q9 (BGK / TRT) incompressible flow with bounce-back obstacles and passive dye.
+
+Sources: D2Q9 BGK of Qian, d'Humieres & Lallemand (1992), Europhys. Lett. 17; Guo, Zheng & Shi (2002)
+forcing; two-relaxation-time with magic 1/4 family of Ginzburg (2005; 3/16 choice per Ginzburg et al.
+2008); textbook: Kruger et al. (2017) "The Lattice Boltzmann Method". Own implementation.
+"""
 from __future__ import annotations
 
 import numpy as np

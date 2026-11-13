@@ -1,4 +1,8 @@
-"""Falling/levelling cellular automaton, the water model most games use."""
+"""Falling/levelling cellular automaton, the water model most games use.
+
+Sources: no paper; the common game pattern (fall, then level with neighbours) as described in
+development write-ups (e.g. Noita GDC 2019 talk; Terraria/Minecraft liquid rules). Own implementation.
+"""
 from __future__ import annotations
 
 import numpy as np

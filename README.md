@@ -36,3 +36,54 @@ in sequence; quality runs in parallel processes, so its ms/step is not a timing.
 
 `python -c "from mandrakemodels.solvers import REGISTRY; print(sorted(REGISTRY))"`. Each class
 docstring states the physics it approximates and what it cannot do.
+
+## Provenance
+
+Every solver here is our own implementation written from the published method; no code was copied
+from another project, so nothing in `src/` carries a third-party licence. Citations are from memory
+and have not been re-checked against the papers.
+
+| solver | method | source |
+|---|---|---|
+| `ca_game` | falling/levelling cellular automaton | game practice (Noita GDC 2019 talk; Terraria/Minecraft liquid rules), no paper |
+| `wca2d` | weighted cellular automaton | Guidolin et al. 2016, Env. Modelling & Software 84 |
+| `pipes` | virtual pipes | O'Brien & Hodgins 1995; Mei, Decaudin & Hu 2007 |
+| `local_inertial` | local-inertial SWE | Bates, Horritt & Fewtrell 2010; de Almeida et al. 2012 |
+| `kinematic_wave` | kinematic wave, Manning | Lighthill & Whitham 1955; Singh 1996 |
+| `diffusion_wave_explicit` | zero-inertia wave, explicit | Hromadka & Yen 1986; Hunter et al. 2005 |
+| `diffusion_wave_implicit_cg` / `_adi` | zero-inertia wave, backward Euler | Panday & Huyakorn 2004; Kollet & Maxwell 2006; CG (Hestenes & Stiefel 1952); ADI (Peaceman & Rachford 1955) |
+| `swe_hll` | full SWE, HLL + hydrostatic reconstruction | Harten, Lax & van Leer 1983; Toro 2009; Audusse et al. 2004 |
+| `swe_lbm` | shallow-water lattice Boltzmann | Zhou 2004 |
+| `linear_wave` | damped wave equation, leapfrog | Hairer, Lubich & Wanner 2003 |
+| `heat_explicit` / `heat_adi` | FTCS / Peaceman-Rachford ADI | Peaceman & Rachford 1955; Thomas 1949 |
+| `stable_fluids` | semi-Lagrangian + projection | Stam 1999 |
+| `lbm_d2q9` | D2Q9 BGK / TRT | Qian, d'Humieres & Lallemand 1992; Guo et al. 2002; Ginzburg 2005 |
+
+Runtime dependencies: numpy (BSD-3), scipy (BSD-3), Pillow (MIT-CMU); optional numba (BSD-2).
+
+### Cross-check libraries (optional, `uv sync --extra crosscheck`)
+
+`src/mandrakemodels/external.py` calls these; it copies nothing from them. None is a core dependency.
+
+| library | licence (from package metadata) | used for | status |
+|---|---|---|---|
+| Landlab 2.11 (`OverlandFlow`, `KinematicWaveRengers`, `LinearDiffusionOverlandFlowRouter`) | MIT | water tiles `ext_landlab_*` | runs; see `results/crosscheck.md` |
+| ANUGA 4.1.0 (DE0 finite-volume SWE on triangles) | Apache-2.0 | water tile `ext_anuga` | runs (needs the `mpich` wheel for its MPI import); see `results/crosscheck.md` |
+| PhiFlow 3.4 / phiml 1.16 | MIT | smoke tile `ext_phiflow_smoke` | runs on `smoke_plume`; see `results/crosscheck.md` |
+| pylbm 0.12 | BSD-3-Clause | LBM | installed; no adapter: its geometry is built from analytic shapes, not cell masks |
+| Clawpack/PyClaw 5.14 | BSD-3-Clause (PyPI) | - | not installed: PyPI has only a macOS-arm64 wheel and an sdist, and this machine has no Fortran compiler |
+| lbmpy 2.1 / pystencils 2.1 | GPL-3.0-or-later | - | not used: GPL; never imported by this package |
+
+## Side-by-side comparison
+
+```sh
+uv run python -m mandrakemodels.compare --scene dam_break --n 128              # all water solvers
+uv run python -m mandrakemodels.compare --scene all --n 96 --external           # every scene, plus open-source tiles
+uv run python -m mandrakemodels.compare --bed my_bed.npy --depth my_depth.npy --name mine --n 128
+```
+
+One initial grid is built once and copied to every solver; each runs on its own stable time step and
+is sampled at common times. Output: `compare/<scene>_<n>/` (state and difference GIFs, MP4, frames)
+under the output root, and `compare/compare.html`, a self-contained player (scene picker, play/pause,
+time slider, state/difference toggle) that works from `file://`. A blown-up, failed or wall-capped
+solver keeps its tile with a red label.

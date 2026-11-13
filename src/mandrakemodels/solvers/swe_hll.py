@@ -1,4 +1,9 @@
-"""Well-balanced first-order shallow water: HLL fluxes with Audusse hydrostatic reconstruction."""
+"""Well-balanced first-order shallow water: HLL fluxes with Audusse hydrostatic reconstruction.
+
+Sources: HLL flux of Harten, Lax & van Leer (1983), SIAM Rev. 25; wave-speed estimates per Toro (2009)
+"Riemann Solvers and Numerical Methods for Fluid Dynamics"; hydrostatic reconstruction of Audusse,
+Bouchut, Bristeau, Klein & Perthame (2004), SIAM J. Sci. Comput. 25. Own implementation.
+"""
 from __future__ import annotations
 
 import math
