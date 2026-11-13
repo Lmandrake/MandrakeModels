@@ -1,0 +1,192 @@
+{
+ "scene": "ocean_edge",
+ "kind": "water",
+ "n": [
+  64,
+  64
+ ],
+ "dx": 1.414,
+ "duration": 120.0,
+ "note": "beach sloping into a sea held at 0 m on the west edge; river enters from the east",
+ "ref": "swe_hll",
+ "solvers": [
+  "swe_hll",
+  "ca_game",
+  "wca2d",
+  "pipes",
+  "local_inertial",
+  "kinematic_wave",
+  "diffusion_wave_explicit",
+  "diffusion_wave_implicit_cg",
+  "diffusion_wave_implicit_adi",
+  "swe_lbm",
+  "ext_landlab_overland",
+  "ext_landlab_kinwave",
+  "ext_anuga"
+ ],
+ "samples": [
+  0.0,
+  3.0,
+  6.0,
+  9.0,
+  12.0,
+  15.0,
+  18.0,
+  21.0,
+  24.0,
+  27.0,
+  30.0,
+  33.0,
+  36.0,
+  39.0,
+  42.0,
+  45.0,
+  48.0,
+  51.0,
+  54.0,
+  57.0,
+  60.0,
+  63.0,
+  66.0,
+  69.0,
+  72.0,
+  75.0,
+  78.0,
+  81.0,
+  84.0,
+  87.0,
+  90.0,
+  93.0,
+  96.0,
+  99.0,
+  102.0,
+  105.0,
+  108.0,
+  111.0,
+  114.0,
+  117.0,
+  120.0
+ ],
+ "diff_scale": 5.368701457977295,
+ "frames": 41,
+ "final": {
+  "swe_hll": {
+   "t": 120.0,
+   "steps": 1586,
+   "status": "ok",
+   "note": "",
+   "ms": 0.7625067595044247,
+   "vol_err": 3.588252398643328e-16,
+   "rms_vs_ref": 0.0
+  },
+  "ca_game": {
+   "t": 120.0,
+   "steps": 240,
+   "status": "ok",
+   "note": "",
+   "ms": 0.1922855247054637,
+   "vol_err": 4.48531549830416e-17,
+   "rms_vs_ref": 0.17714758149145718
+  },
+  "wca2d": {
+   "t": 120.0,
+   "steps": 794,
+   "status": "ok",
+   "note": "",
+   "ms": 0.55094996737891,
+   "vol_err": 7.84930212203228e-17,
+   "rms_vs_ref": 0.13216994291414907
+  },
+  "pipes": {
+   "t": 120.0,
+   "steps": 800,
+   "status": "ok",
+   "note": "",
+   "ms": 0.44938951530639315,
+   "vol_err": 2.6538116698299616e-16,
+   "rms_vs_ref": 0.04927213492293004
+  },
+  "local_inertial": {
+   "t": 120.0,
+   "steps": 1200,
+   "status": "ok",
+   "note": "",
+   "ms": 0.47043008931116975,
+   "vol_err": 1.2708393911861788e-16,
+   "rms_vs_ref": 0.016521711095908803
+  },
+  "kinematic_wave": {
+   "t": 120.0,
+   "steps": 15402,
+   "status": "ok",
+   "note": "",
+   "ms": 0.24650583631046907,
+   "vol_err": 1.0645148782641873e-14,
+   "rms_vs_ref": 17.341233515032705
+  },
+  "diffusion_wave_explicit": {
+   "t": 0.2332528664425828,
+   "steps": 43740,
+   "status": "stopped",
+   "note": "wall cap 20s at t=0.233",
+   "ms": 0.28933382848708644,
+   "vol_err": 4.226154202422328e-17,
+   "rms_vs_ref": 0.051441402750712115
+  },
+  "diffusion_wave_implicit_cg": {
+   "t": 120.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 53.39937325188657,
+   "vol_err": 3.420053067456922e-16,
+   "rms_vs_ref": 0.030871103806439714
+  },
+  "diffusion_wave_implicit_adi": {
+   "t": 120.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 33.51851857441943,
+   "vol_err": 3.9919307934907024e-15,
+   "rms_vs_ref": 0.035831664941641216
+  },
+  "swe_lbm": {
+   "t": 32.50090900082538,
+   "steps": 8694,
+   "status": "stopped",
+   "note": "wall cap 20s at t=32.5",
+   "ms": 2.2435024991743826,
+   "vol_err": 7.223226833727325e-16,
+   "rms_vs_ref": 0.1422369584801945
+  },
+  "ext_landlab_overland": {
+   "t": 31.07714042105383,
+   "steps": 269,
+   "status": "stopped",
+   "note": "wall cap 20s at t=31.1",
+   "ms": 73.97866649851791,
+   "vol_err": 2.5487345986575295e-05,
+   "rms_vs_ref": 0.019317906930100104
+  },
+  "ext_landlab_kinwave": {
+   "t": 6.0,
+   "steps": 6,
+   "status": "stopped",
+   "note": "wall cap 20s at t=6",
+   "ms": 3871.1135263292817,
+   "vol_err": 1.6760976126898646,
+   "rms_vs_ref": 4.540462899352105
+  },
+  "ext_anuga": {
+   "t": 120.0,
+   "steps": 120,
+   "status": "ok",
+   "note": "",
+   "ms": 101.25164825076354,
+   "vol_err": 1.9436367159318028e-16,
+   "rms_vs_ref": 0.007118787008279672
+  }
+ },
+ "made": "2026-11-12T17:04:07"
+}

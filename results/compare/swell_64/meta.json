@@ -1,0 +1,192 @@
+{
+ "scene": "swell",
+ "kind": "water",
+ "n": [
+  64,
+  64
+ ],
+ "dx": 1.414,
+ "duration": 60.0,
+ "note": "sea edge rises and falls 0.3 m every 8 s onto a beach with two breakwaters",
+ "ref": "swe_hll",
+ "solvers": [
+  "swe_hll",
+  "ca_game",
+  "wca2d",
+  "pipes",
+  "local_inertial",
+  "kinematic_wave",
+  "diffusion_wave_explicit",
+  "diffusion_wave_implicit_cg",
+  "diffusion_wave_implicit_adi",
+  "swe_lbm",
+  "ext_landlab_overland",
+  "ext_landlab_kinwave",
+  "ext_anuga"
+ ],
+ "samples": [
+  0.0,
+  1.5,
+  3.0,
+  4.5,
+  6.0,
+  7.5,
+  9.0,
+  10.5,
+  12.0,
+  13.5,
+  15.0,
+  16.5,
+  18.0,
+  19.5,
+  21.0,
+  22.5,
+  24.0,
+  25.5,
+  27.0,
+  28.5,
+  30.0,
+  31.5,
+  33.0,
+  34.5,
+  36.0,
+  37.5,
+  39.0,
+  40.5,
+  42.0,
+  43.5,
+  45.0,
+  46.5,
+  48.0,
+  49.5,
+  51.0,
+  52.5,
+  54.0,
+  55.5,
+  57.0,
+  58.5,
+  60.0
+ ],
+ "diff_scale": 7.529966354370117,
+ "frames": 41,
+ "final": {
+  "swe_hll": {
+   "t": 60.0,
+   "steps": 901,
+   "status": "ok",
+   "note": "",
+   "ms": 0.6514731357876753,
+   "vol_err": 6.659811835815292e-17,
+   "rms_vs_ref": 0.0
+  },
+  "ca_game": {
+   "t": 60.0,
+   "steps": 120,
+   "status": "ok",
+   "note": "",
+   "ms": 0.15443960728589445,
+   "vol_err": 8.365045914743804e-17,
+   "rms_vs_ref": 0.1497569204593737
+  },
+  "wca2d": {
+   "t": 60.0,
+   "steps": 779,
+   "status": "ok",
+   "note": "",
+   "ms": 0.4385544993796306,
+   "vol_err": 1.1896357432524897e-16,
+   "rms_vs_ref": 0.14591992149316896
+  },
+  "pipes": {
+   "t": 60.0,
+   "steps": 400,
+   "status": "ok",
+   "note": "",
+   "ms": 0.401262484738254,
+   "vol_err": 9.613760633959172e-17,
+   "rms_vs_ref": 0.21367015051489877
+  },
+  "local_inertial": {
+   "t": 60.0,
+   "steps": 680,
+   "status": "ok",
+   "note": "",
+   "ms": 0.3926245113475221,
+   "vol_err": 7.733975035140339e-17,
+   "rms_vs_ref": 0.08191135282884547
+  },
+  "kinematic_wave": {
+   "t": 60.0,
+   "steps": 8261,
+   "status": "ok",
+   "note": "",
+   "ms": 0.2370418675143293,
+   "vol_err": 3.574815127353757e-15,
+   "rms_vs_ref": 12.69913355156411
+  },
+  "diffusion_wave_explicit": {
+   "t": 0.07623395902450526,
+   "steps": 20872,
+   "status": "stopped",
+   "note": "wall cap 10s at t=0.0762",
+   "ms": 0.2996570459682712,
+   "vol_err": 7.948807675005348e-17,
+   "rms_vs_ref": 0.1552311584299096
+  },
+  "diffusion_wave_implicit_cg": {
+   "t": 60.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 30.285797775286483,
+   "vol_err": 3.3836140778738985e-17,
+   "rms_vs_ref": 0.14959660579220835
+  },
+  "diffusion_wave_implicit_adi": {
+   "t": 60.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 2.312759625783656,
+   "vol_err": 4.801509500982961e-16,
+   "rms_vs_ref": 0.1489849836933227
+  },
+  "swe_lbm": {
+   "t": 60.0,
+   "steps": 1750,
+   "status": "ok",
+   "note": "",
+   "ms": 2.0691020688973367,
+   "vol_err": 1.503828479055066e-17,
+   "rms_vs_ref": 0.08550776968427203
+  },
+  "ext_landlab_overland": {
+   "t": 10.816125356069028,
+   "steps": 106,
+   "status": "stopped",
+   "note": "wall cap 10s at t=10.8",
+   "ms": 93.97288788585563,
+   "vol_err": 1.4794324045726289e-09,
+   "rms_vs_ref": 0.276505369307143
+  },
+  "ext_landlab_kinwave": {
+   "t": 60.0,
+   "steps": 80,
+   "status": "ok",
+   "note": "",
+   "ms": 25.969560599696706,
+   "vol_err": 1.1478889458424026,
+   "rms_vs_ref": 3.923496456474611
+  },
+  "ext_anuga": {
+   "t": 60.0,
+   "steps": 80,
+   "status": "ok",
+   "note": "",
+   "ms": 105.62531081450288,
+   "vol_err": 1.0473091193419209e-16,
+   "rms_vs_ref": 0.09876665059819288
+  }
+ },
+ "made": "2026-11-12T17:11:02"
+}

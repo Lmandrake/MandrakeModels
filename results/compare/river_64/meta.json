@@ -1,0 +1,192 @@
+{
+ "scene": "river",
+ "kind": "water",
+ "n": [
+  64,
+  64
+ ],
+ "dx": 1.414,
+ "duration": 120.0,
+ "note": "meandering sloped channel, inflow source upstream, free-outfall sink downstream",
+ "ref": "swe_hll",
+ "solvers": [
+  "swe_hll",
+  "ca_game",
+  "wca2d",
+  "pipes",
+  "local_inertial",
+  "kinematic_wave",
+  "diffusion_wave_explicit",
+  "diffusion_wave_implicit_cg",
+  "diffusion_wave_implicit_adi",
+  "swe_lbm",
+  "ext_landlab_overland",
+  "ext_landlab_kinwave",
+  "ext_anuga"
+ ],
+ "samples": [
+  0.0,
+  3.0,
+  6.0,
+  9.0,
+  12.0,
+  15.0,
+  18.0,
+  21.0,
+  24.0,
+  27.0,
+  30.0,
+  33.0,
+  36.0,
+  39.0,
+  42.0,
+  45.0,
+  48.0,
+  51.0,
+  54.0,
+  57.0,
+  60.0,
+  63.0,
+  66.0,
+  69.0,
+  72.0,
+  75.0,
+  78.0,
+  81.0,
+  84.0,
+  87.0,
+  90.0,
+  93.0,
+  96.0,
+  99.0,
+  102.0,
+  105.0,
+  108.0,
+  111.0,
+  114.0,
+  117.0,
+  120.0
+ ],
+ "diff_scale": 1.0486903190612793,
+ "frames": 41,
+ "final": {
+  "swe_hll": {
+   "t": 120.0,
+   "steps": 814,
+   "status": "ok",
+   "note": "",
+   "ms": 0.7661894090097233,
+   "vol_err": 1.1868740569253014e-15,
+   "rms_vs_ref": 0.0
+  },
+  "ca_game": {
+   "t": 120.0,
+   "steps": 240,
+   "status": "ok",
+   "note": "",
+   "ms": 0.20863948702753987,
+   "vol_err": 3.078738789102771e-15,
+   "rms_vs_ref": 0.2500951134467621
+  },
+  "wca2d": {
+   "t": 120.0,
+   "steps": 895,
+   "status": "ok",
+   "note": "",
+   "ms": 0.4468684246979508,
+   "vol_err": 4.478852544219808e-16,
+   "rms_vs_ref": 0.1904996103056176
+  },
+  "pipes": {
+   "t": 120.0,
+   "steps": 800,
+   "status": "ok",
+   "note": "",
+   "ms": 0.3709763708320679,
+   "vol_err": 2.9981584441990167e-15,
+   "rms_vs_ref": 0.1174862319513627
+  },
+  "local_inertial": {
+   "t": 120.0,
+   "steps": 493,
+   "status": "ok",
+   "note": "",
+   "ms": 0.3791068237001911,
+   "vol_err": 2.4642732809940593e-16,
+   "rms_vs_ref": 0.02827539031116164
+  },
+  "kinematic_wave": {
+   "t": 120.0,
+   "steps": 925,
+   "status": "ok",
+   "note": "",
+   "ms": 0.22771767151818886,
+   "vol_err": 3.4410987530699572e-15,
+   "rms_vs_ref": 2.2375303600371375
+  },
+  "diffusion_wave_explicit": {
+   "t": 13.66023503899416,
+   "steps": 40482,
+   "status": "stopped",
+   "note": "wall cap 20s at t=13.7",
+   "ms": 0.3126030699677255,
+   "vol_err": 1.065101994997844e-15,
+   "rms_vs_ref": 0.0371331508444406
+  },
+  "diffusion_wave_implicit_cg": {
+   "t": 120.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 42.041253649949795,
+   "vol_err": 7.105749784578749e-16,
+   "rms_vs_ref": 0.047496553702737185
+  },
+  "diffusion_wave_implicit_adi": {
+   "t": 120.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 31.774132278223988,
+   "vol_err": 5.7433765331846824e-15,
+   "rms_vs_ref": 0.1502884806240414
+  },
+  "swe_lbm": {
+   "t": 59.337137578368655,
+   "steps": 9047,
+   "status": "stopped",
+   "note": "wall cap 20s at t=59.3",
+   "ms": 2.1567336882383934,
+   "vol_err": 8.111161346522042e-15,
+   "rms_vs_ref": 0.16073365083849467
+  },
+  "ext_landlab_overland": {
+   "t": 80.0448033267805,
+   "steps": 313,
+   "status": "stopped",
+   "note": "wall cap 20s at t=80",
+   "ms": 63.46927950502382,
+   "vol_err": 0.0009446813410888266,
+   "rms_vs_ref": 0.03536124680907166
+  },
+  "ext_landlab_kinwave": {
+   "t": 24.0,
+   "steps": 24,
+   "status": "stopped",
+   "note": "wall cap 20s at t=24",
+   "ms": 844.5403933728812,
+   "vol_err": 0.5678485621069467,
+   "rms_vs_ref": 0.7147716258132194
+  },
+  "ext_anuga": {
+   "t": 120.0,
+   "steps": 120,
+   "status": "ok",
+   "note": "",
+   "ms": 42.60938321701057,
+   "vol_err": 6.915164304163027e-15,
+   "rms_vs_ref": 0.025777369177627296
+  }
+ },
+ "made": "2026-11-12T17:00:31"
+}

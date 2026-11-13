@@ -1,0 +1,192 @@
+{
+ "scene": "dam_break",
+ "kind": "water",
+ "n": [
+  64,
+  64
+ ],
+ "dx": 1.414,
+ "duration": 40.0,
+ "note": "partial dam breach, 2 m onto 0.3 m wet bed",
+ "ref": "swe_hll",
+ "solvers": [
+  "swe_hll",
+  "ca_game",
+  "wca2d",
+  "pipes",
+  "local_inertial",
+  "kinematic_wave",
+  "diffusion_wave_explicit",
+  "diffusion_wave_implicit_cg",
+  "diffusion_wave_implicit_adi",
+  "swe_lbm",
+  "ext_landlab_overland",
+  "ext_landlab_kinwave",
+  "ext_anuga"
+ ],
+ "samples": [
+  0.0,
+  1.0,
+  2.0,
+  3.0,
+  4.0,
+  5.0,
+  6.0,
+  7.0,
+  8.0,
+  9.0,
+  10.0,
+  11.0,
+  12.0,
+  13.0,
+  14.0,
+  15.0,
+  16.0,
+  17.0,
+  18.0,
+  19.0,
+  20.0,
+  21.0,
+  22.0,
+  23.0,
+  24.0,
+  25.0,
+  26.0,
+  27.0,
+  28.0,
+  29.0,
+  30.0,
+  31.0,
+  32.0,
+  33.0,
+  34.0,
+  35.0,
+  36.0,
+  37.0,
+  38.0,
+  39.0,
+  40.0
+ ],
+ "diff_scale": 0.8606404066085815,
+ "frames": 41,
+ "final": {
+  "swe_hll": {
+   "t": 40.0,
+   "steps": 402,
+   "status": "ok",
+   "note": "",
+   "ms": 0.6869517706782877,
+   "vol_err": 2.610679098219343e-16,
+   "rms_vs_ref": 0.0
+  },
+  "ca_game": {
+   "t": 40.0,
+   "steps": 80,
+   "status": "ok",
+   "note": "",
+   "ms": 0.17604228887648787,
+   "vol_err": 1.3053395491096716e-16,
+   "rms_vs_ref": 0.39710581413893303
+  },
+  "wca2d": {
+   "t": 40.0,
+   "steps": 280,
+   "status": "ok",
+   "note": "",
+   "ms": 0.4507818472380417,
+   "vol_err": 1.3053395491096716e-16,
+   "rms_vs_ref": 0.3789310442163412
+  },
+  "pipes": {
+   "t": 40.0,
+   "steps": 280,
+   "status": "ok",
+   "note": "",
+   "ms": 0.3901168390127298,
+   "vol_err": 2.610679098219343e-16,
+   "rms_vs_ref": 0.3570021862314574
+  },
+  "local_inertial": {
+   "t": 40.0,
+   "steps": 205,
+   "status": "ok",
+   "note": "",
+   "ms": 0.3671784039087048,
+   "vol_err": 1.3053395491096716e-16,
+   "rms_vs_ref": 0.3297750687158926
+  },
+  "kinematic_wave": {
+   "t": 40.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 0.21886549729970284,
+   "vol_err": 0.0,
+   "rms_vs_ref": 0.4189517049994896
+  },
+  "diffusion_wave_explicit": {
+   "t": 1.8437181131857423,
+   "steps": 38924,
+   "status": "stopped",
+   "note": "wall cap 20s at t=1.84",
+   "ms": 0.31648218034931924,
+   "vol_err": 1.3053395491096716e-16,
+   "rms_vs_ref": 0.3326705574871568
+  },
+  "diffusion_wave_implicit_cg": {
+   "t": 40.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 40.2286994503811,
+   "vol_err": 2.610679098219343e-16,
+   "rms_vs_ref": 0.3482483295743332
+  },
+  "diffusion_wave_implicit_adi": {
+   "t": 40.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 3.190083977096947,
+   "vol_err": 1.3053395491096716e-16,
+   "rms_vs_ref": 0.25756733110858016
+  },
+  "swe_lbm": {
+   "t": 40.0,
+   "steps": 2409,
+   "status": "ok",
+   "note": "",
+   "ms": 2.3335017645271514,
+   "vol_err": 2.610679098219343e-16,
+   "rms_vs_ref": 0.2207525097583664
+  },
+  "ext_landlab_overland": {
+   "t": 40.0,
+   "steps": 209,
+   "status": "ok",
+   "note": "",
+   "ms": 50.41287643052348,
+   "vol_err": 1.3053395491096716e-16,
+   "rms_vs_ref": 0.20652812944702933
+  },
+  "ext_landlab_kinwave": {
+   "t": 40.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 0.3337608264700975,
+   "vol_err": 0.0,
+   "rms_vs_ref": 0.4189517049994896
+  },
+  "ext_anuga": {
+   "t": 40.0,
+   "steps": 40,
+   "status": "ok",
+   "note": "",
+   "ms": 90.44215125177288,
+   "vol_err": 1.3053395491096716e-16,
+   "rms_vs_ref": 0.03927237012198613
+  }
+ },
+ "made": "2026-11-12T16:58:52"
+}

@@ -1,0 +1,92 @@
+{
+ "scene": "smoke_plume",
+ "kind": "flow",
+ "n": [
+  64,
+  64
+ ],
+ "dx": 1.0,
+ "duration": 6.0,
+ "note": "buoyant smoke rising from a vent past a disc and a shelf (closed box)",
+ "ref": "stable_fluids",
+ "solvers": [
+  "stable_fluids",
+  "lbm_d2q9",
+  "ext_phiflow_smoke"
+ ],
+ "samples": [
+  0,
+  5,
+  10,
+  14,
+  19,
+  24,
+  29,
+  34,
+  38,
+  43,
+  48,
+  53,
+  58,
+  62,
+  67,
+  72,
+  77,
+  82,
+  86,
+  91,
+  96,
+  101,
+  106,
+  110,
+  115,
+  120,
+  125,
+  130,
+  134,
+  139,
+  144,
+  149,
+  154,
+  158,
+  163,
+  168,
+  173,
+  178,
+  182,
+  187,
+  192
+ ],
+ "diff_scale": 0.7762807011604309,
+ "frames": 41,
+ "final": {
+  "stable_fluids": {
+   "t": 192.0,
+   "steps": 192,
+   "status": "ok",
+   "note": "",
+   "ms": 9.575394082882363,
+   "vol_err": null,
+   "rms_vs_ref": 0.0
+  },
+  "lbm_d2q9": {
+   "t": 192.0,
+   "steps": 192,
+   "status": "ok",
+   "note": "",
+   "ms": 3.8133571238176955,
+   "vol_err": null,
+   "rms_vs_ref": 0.11968676379277492
+  },
+  "ext_phiflow_smoke": {
+   "t": 113.0,
+   "steps": 113,
+   "status": "stopped",
+   "note": "wall cap 30s at t=113",
+   "ms": 264.801745274644,
+   "vol_err": null,
+   "rms_vs_ref": 0.16979845298462676
+  }
+ },
+ "made": "2026-11-12T17:12:23"
+}
