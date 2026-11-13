@@ -142,16 +142,16 @@ def run_one(cls, sc, samples, max_wall, store_snaps, style):
             while events and s.t >= events[0][0] - 1e-9:
                 _, meth, kw = events.pop(0)
                 getattr(s, meth)(**kw)
-            if flow:
-                dt = s.stable_dt()
-            else:
-                dt = min(s.stable_dt(), target - s.t)
-                if sc.kind == "water":
-                    dt = min(dt, WATER_DT_CAP)
-                if events and events[0][0] - s.t > 1e-9:
-                    dt = min(dt, events[0][0] - s.t)
-                dt = max(dt, 1e-6)
             try:
+                if flow:
+                    dt = s.stable_dt()
+                else:
+                    dt = min(s.stable_dt(), target - s.t)
+                    if sc.kind == "water":
+                        dt = min(dt, WATER_DT_CAP)
+                    if events and events[0][0] - s.t > 1e-9:
+                        dt = min(dt, events[0][0] - s.t)
+                    dt = max(dt, 1e-6)
                 a = time.perf_counter()
                 s.step(dt)
                 step_wall += time.perf_counter() - a
@@ -349,6 +349,20 @@ def save_outputs(sc, order, samples, runs, state_frames, diff_frames, scale, d: 
     return mp4
 
 
+HTML_WIDTH, HTML_QUALITY, HTML_FRAMES = 760, 45, 20   # keeps the 14-scene player under ~10 MB
+
+
+def _html_enc(p: Path) -> str:
+    """Frame re-encoded small for the player; the full-size frames stay on disk next to it."""
+    import io
+    im = Image.open(p)
+    if im.width > HTML_WIDTH:
+        im = im.resize((HTML_WIDTH, round(im.height * HTML_WIDTH / im.width)), Image.LANCZOS)
+    buf = io.BytesIO()
+    im.save(buf, "WEBP", quality=HTML_QUALITY, method=4)
+    return "data:image/webp;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 def build_html(root: Path) -> Path:
     runs = []
     for m in sorted(root.glob("*/meta.json")):
@@ -358,10 +372,12 @@ def build_html(root: Path) -> Path:
         df = sorted(fr.glob("diff_*.webp"))
         if not st:
             continue
-        enc = lambda p: "data:image/webp;base64," + base64.b64encode(p.read_bytes()).decode()  # noqa: E731
+        keep = sorted({round(i * (len(st) - 1) / max(1, HTML_FRAMES - 1)) for i in range(min(len(st), HTML_FRAMES))})
+        samples = meta["samples"]
         runs.append({"id": m.parent.name, "label": f"{meta['scene']} {meta['n'][1]}x{meta['n'][0]}",
-                     "note": meta.get("note", ""), "kind": meta["kind"], "samples": meta["samples"],
-                     "state": [enc(p) for p in st], "diff": [enc(p) for p in df],
+                     "note": meta.get("note", ""), "kind": meta["kind"],
+                     "samples": [samples[i] for i in keep if i < len(samples)],
+                     "state": [_html_enc(st[i]) for i in keep], "diff": [_html_enc(df[i]) for i in keep if i < len(df)],
                      "final": meta["final"]})
     page = HTML.replace("__DATA__", json.dumps(runs))
     out = root / "compare.html"

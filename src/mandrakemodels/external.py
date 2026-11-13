@@ -79,7 +79,12 @@ class LandlabOverland(_LandlabWater):
 
     def stable_dt(self):
         self._push()
-        return float(min(self.of.calc_time_step(), 5.0))
+        try:
+            return float(min(self.of.calc_time_step(), 5.0))
+        except Exception as e:  # Landlab raises NoWaterError on a dry grid: nothing limits dt there
+            if type(e).__name__ != "NoWaterError":
+                raise
+            return 5.0
 
     def _advance(self, dt):
         self.of.overland_flow(dt=dt)
