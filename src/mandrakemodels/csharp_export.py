@@ -1,9 +1,11 @@
 """Export water scenes and a local-inertial reference run for the C# console port (stage C).
 
-    python -m mandrakemodels.csharp_export --out DIR --sizes 128,250 --scenes river,lake_at_rest,pit_dig,dam_break,swell
+    python -m mandrakemodels.csharp_export --out DIR --sizes 128,250 --scenes river,lake_at_rest,pit_dig,dam_break,swell \
+        [--solver local_inertial|local_inertial_frcap|local_inertial_frcap07]
 
 Writes ``DIR/<scene>_<n>.lis`` (little-endian binary, read by ``csharp/LiTiming/SceneFile.cs``): the scene's bed, depth,
-walls, forcing and events, then the Python ``LocalInertial`` depth at a few checkpoint times. Both sides choose dt by the
+walls, forcing and events, then the reference solver's depth at a few checkpoint times. The file records the reference's face Froude cap
+(0 = none), so the C# side runs the same scheme. Both sides choose dt by the
 same rule (bakeoff ``choose_dt`` plus landing exactly on each checkpoint), so the comparison is step for step.
 Callable forcing is encoded by kind: the swell level is a sine (amplitude, period); any other callable is refused.
 """
@@ -18,9 +20,10 @@ import numpy as np
 
 from . import scenes
 from .bakeoff import WATER_DT_CAP
-from .solvers.local_inertial import LocalInertial
+from .solvers.local_inertial import SOLVERS
 
-MAGIC = b"LIS1"
+REFERENCES = {c.name: c for c in SOLVERS}
+MAGIC = b"LIS2"          # LIS1 plus the face Froude cap after alpha
 CHECKPOINTS = 4          # evenly spaced over the duration, the last at the end
 
 
@@ -40,9 +43,13 @@ def _level_kind(sc, lv):
     raise SystemExit(f"{sc.name}: callable level not encodable")
 
 
-def reference(sc, times):
-    """Run Python local-inertial with the bakeoff dt rule, landing on each checkpoint time; return h at each."""
-    s = LocalInertial.from_scene(sc)
+def fr_max_of(cls) -> float:
+    return float(getattr(cls, "fr_max", 0.0))
+
+
+def reference(sc, times, cls):
+    """Run the reference solver with the bakeoff dt rule, landing on each checkpoint time; return h at each."""
+    s = cls.from_scene(sc)
     events = sorted(sc.events, key=lambda e: e[0])
     out, steps = [], 0
     for tc in times:
@@ -90,19 +97,20 @@ def stress_half(n, seed=0):
 LOCAL = {"census_river": census_river, "stress_half": stress_half}
 
 
-def export(name, n, out_dir: Path, seed=0, ref=True):
+def export(name, n, out_dir: Path, seed=0, ref=True, solver="local_inertial"):
+    cls = REFERENCES[solver]
     sc = LOCAL[name](n, seed) if name in LOCAL else scenes.build(name, n, seed)
     if callable(sc.forcing.rain) or sc.forcing.groundwater is not None and not np.isscalar(sc.forcing.groundwater.table):
         raise SystemExit(f"{name}: rain/groundwater form not encodable")
     p = {"manning": 0.03, "theta": 0.8, "alpha": 0.6, **sc.params}
     times = [sc.duration * (k + 1) / CHECKPOINTS for k in range(CHECKPOINTS)]
-    ref = reference(sc, times) if ref else []
+    ref = reference(sc, times, cls) if ref else []
     path = out_dir / f"{name}_{n}.lis"
     g, fo = sc.grid, sc.forcing
     with path.open("wb") as f:
         f.write(MAGIC)
         f.write(struct.pack("<ii", g.ny, g.nx))
-        f.write(struct.pack("<5d", g.dx, p["manning"], p["theta"], p["alpha"], sc.duration))
+        f.write(struct.pack("<6d", g.dx, p["manning"], p["theta"], p["alpha"], fr_max_of(cls), sc.duration))
         _arr(f, sc.init["z"]); _arr(f, sc.init["h"]); _mask(f, sc.init["wall"])
         f.write(struct.pack("<dd", float(fo.evaporation), float(fo.rain or 0.0)))
         f.write(struct.pack("<i", len(fo.sources)))
@@ -139,12 +147,14 @@ def main(argv=None):
     ap.add_argument("--sizes", default="128,250")
     ap.add_argument("--scenes", default="river,lake_at_rest,pit_dig,dam_break,swell")
     ap.add_argument("--no-ref", action="store_true", help="scene only, no Python reference checkpoints (timing loads)")
+    ap.add_argument("--solver", default="local_inertial", choices=sorted(REFERENCES),
+                    help="reference solver; its face Froude cap is written into the scene (timing loads too)")
     a = ap.parse_args(argv)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     for n in [int(x) for x in a.sizes.split(",")]:
         for name in a.scenes.split(","):
-            path, steps = export(name, n, out, ref=not a.no_ref)
+            path, steps = export(name, n, out, ref=not a.no_ref, solver=a.solver)
             print(f"{path.name}: {steps} reference steps", flush=True)
 
 

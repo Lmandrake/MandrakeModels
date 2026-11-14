@@ -10,7 +10,7 @@ namespace LiTiming
 {
     /// <summary>
     /// Stage C console: fidelity against the Python reference, timing on the game clock, stability and ledger fuzz.
-    ///   LiTiming fidelity  DIR OUT.jsonl
+    ///   LiTiming fidelity  DIR OUT.jsonl     (the scene files carry the reference solver's face Froude cap; LIS1 = none)
     ///   LiTiming timing    DIR OUT.csv [--modes full,wet] [--only a,b] [--label L]
     ///   LiTiming stability DIR OUT.jsonl
     ///   LiTiming fuzz      FILE.lis OUT.jsonl [--seqs 1000]
@@ -152,7 +152,8 @@ namespace LiTiming
                            .Append(",\"books_dl\":").Append(full.BooksError).Append(",\"books_dl_wet\":").Append(wet.BooksError)
                            .Append(",\"min_v\":").Append(Math.Min(full.MinVSeen, wet.MinVSeen))
                            .Append(",\"wet_only_identical\":").Append(same ? "true" : "false")
-                           .Append(",\"py_volume_error_m3\":").Append(F(cp.verr));
+                           .Append(",\"py_volume_error_m3\":").Append(F(cp.verr))
+                           .Append(",\"fr_max\":").Append(F(full.FrMax)).Append(",\"capped_faces\":").Append(full.CappedFaces);
                         bool ok = l1rel <= 0.02 && iou >= 0.98 && full.BooksError == 0 && wet.BooksError == 0 && same && full.MinVSeen >= 0;
                         if (s.Name.StartsWith("lake_at_rest"))
                         {
