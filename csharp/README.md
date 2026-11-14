@@ -11,7 +11,8 @@ for timing on the runtime RimWorld uses. Not mod code; nothing here touches the 
   0.2 water-s, CFL substeps), `stability`, `fuzz`, `profile`.
 - `MonoHost/monohost.py`: runs the net472 build on **RimWorld's own Mono** (`MonoBleedingEdge\EmbedRuntime\mono-2.0-bdwgc.dll`
   with `RimWorldWin64_Data\Managed` as the class library), embedded from Windows Python by ctypes the way Unity embeds it.
-- `run_stagec.sh`: the whole run (build on `D:\ClaudeWork\mandrakemodels\stagec`, since dotnet.exe cannot build from a
+- `LiTiming/Spreader.cs`: one recompute spread over its 12 ticks (weighted block-passes), bitwise equal to running it whole.
+- `run_stagec.sh`: the whole run; `REF=` picks the Python reference solver (default `local_inertial_frcap`), `STEPS=` a subset (build on `D:\ClaudeWork\mandrakemodels\stagec`, since dotnet.exe cannot build from a
   WSL path).
 
 Scenes:
@@ -20,5 +21,5 @@ Scenes:
     python -m mandrakemodels.csharp_export --out $STAGEC/load --sizes 250,325,400 --no-ref \
         --scenes river,lake_at_rest,pit_dig,dam_break,swell,census_river,stress_half          # timing loads
 
-`LITIMING_MUTATE=manning|theta|walldelete` plants a fault (for proving the checkers go red); `nocbrt` is a timing probe.
+`LITIMING_MUTATE=manning|theta|walldelete|frcap1|nocap|nowake|nodeadband` plants a fault (for proving the checkers go red); `nocbrt` is a timing probe.
 Results: `results/stagec.md`.

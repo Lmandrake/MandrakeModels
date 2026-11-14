@@ -125,3 +125,69 @@ stability_net8.jsonl:
 fuzz_mono.jsonl: 1000 sequences, 50037 edits, 150000 recompute checks, 0 failures (Mono 6.13.0 (Visual Studio built mono))
 
 fuzz_net8_pit.jsonl: 1000 sequences, 50037 edits, 150000 recompute checks, 0 failures (.NET 8.0.29)
+
+## Stage C, second pass (2026-11-14): Froude cap, sleeping water, spread recompute
+
+Items `RIMMANDRAKE_PORT_FROUDE_CAP_TO_CSHARP_WATER_DECIDED_TWICE` and `RIMMANDRAKE_BUILD_SETTLED_WATER_SLEEP_BAR_STILL_RED`.
+Run: `bash csharp/run_stagec.sh` (now `REF=local_inertial_frcap` by default); raw output
+`D:\ClaudeWork\mandrakemodels\stagec\out_frcap_final\`, planted faults in `out_mut_frcap1_final\`, `out_mut_frcap1\`,
+`out_mut_nocap\`, sleep probes in `out_dev\`. Every figure [measured] on Archmagi, shared with other helpers' builds and
+selftests (load not controlled), Unity Mono 6.13 unless named. **The owner has not chosen an engine (2026-11-14); this is
+measurement only.**
+
+What changed in the C#:
+- **Face Froude cap**: after friction each face discharge is clipped to 0.544 h_f sqrt(g h_f), as `LocalInertialFrCap._limit`.
+  Scenes are now `LIS2`: the reference solver's cap travels in the file (`csharp_export --solver`).
+- **1 dL dead band**: a surface difference within 1 dL of depth across a face counts as flat. Rounding each square to whole
+  dL leaves a flat lake up to 1 dL uneven across a face; that noise drove a slosh that never damps in deep water (the 0.2 mm
+  drift above) and kept the lake from ever sleeping (16 of 133 blocks asleep without the band, 133 of 133 with it).
+- **Sleep** (`Sleep`, mode `sleep`): a 16x16 block whose faces all carried |q| <= 1.4e-5 m^2/s (1 dL per 5 water-s on a
+  1.414 m face) for 1 water-s, and that no forcing pins, is no longer stepped. It wakes when a stepped neighbour's shared
+  face carries more, or an edit (dig, bed raise, wall, demolish) touches it or a neighbouring block. Evaporation still
+  reaches sleeping water.
+- **Equal substeps per recompute** (already built, 6561867) and **the recompute spread over its 12 ticks** (`Spreader.cs`):
+  each tick does its share of the recompute's block-passes, weighted by measured pass cost (faces ~87% of a step).
+
+Fidelity against `local_inertial_frcap`: **40 of 40 rows pass** on Mono and .NET 8 (worst relative L1 9.3e-5, books 0 dL,
+wet-only bitwise equal to full grid); a sleeping twin meets the same tolerances in every row (worst L1 9.3e-5). Planted
+faults: cap 1.0 turns 21 rows red (7 of 8 dam_break; dam_break_250 at 10 s is 1.7% off, inside the 2% bar), the cap removed
+turns 22 red, the dead band removed keeps the lake awake (0.45 ms/tick at 325 on .NET 8), edits not waking sleeping water
+fail the wake check (hole 44% off).
+
+Mean ms per tick (12-tick recompute over 12 ticks), Unity Mono, worse of two repeats:
+
+| scene | n | wet squares | full | wet-only | sleep | bar |
+|---|---|---|---|---|---|---|
+| census_river | 250 | 13,166 | 0.178 | 0.134 | 0.134 | |
+| census_river | 325 | 17,121 | 0.260 | **0.161** | 0.164 | 0.5 pass |
+| stress_half | 250 | 32,422 | 0.911 | 0.825 | 0.773 | |
+| stress_half | 325 | 53,813 | 1.604 | **1.376** | 1.214 | 2 pass |
+| lake_at_rest (60 s from the start, falling asleep included) | 250 | 24,873 | 0.502 | 0.464 | 0.0089 | |
+| lake_at_rest | 325 | 38,553 | 0.800 | 0.728 | **0.0147** | 0.05 pass |
+| dam_break | 325 | 105,135 | 1.828 | 1.825 | 0.681 | |
+| swell | 325 | 83,686 | 2.156 | 2.300 | 1.518 | |
+| river | 325 | 5,857 | 0.161 | 0.070 | 0.072 | |
+| pit_dig | 325 | 7,092 | 0.167 | 0.075 | 0.078 | |
+
+- **The cap costs nothing measurable**: capped census river 325 wet-only 0.164 ms/tick against 0.163 uncapped; stress 325
+  1.471 against 1.452 (cap only, before the dead band; `out_local_inertial_frcap\timing_final.csv`).
+- **Settled bar**: once asleep, the 325 lake costs **0.00058 ms/tick** (250: 0.00035); it falls asleep in 6 recomputes
+  (1.2 water-s) and its surface moves 0 m over 300 recomputes (`settled_mono.csv`).
+- **Spread**: bitwise the same water as the recompute in one go, in every scene and both modes. Worst tick, 325:
+
+| scene (wet-only) | recompute in one tick, p95 ms | spread: p95 ms/tick | spread: max ms/tick |
+|---|---|---|---|
+| census_river | 2.29 | 0.34 | 0.81 |
+| stress_half | 16.88 | 1.76 | 5.02 |
+| swell | 26.29 | 2.66 | 5.04 |
+| dam_break | 22.81 | 2.44 | 4.83 |
+
+- **Wake**: a 24x24 hole 2 m deep dug under the sleeping lake (250 and 325) fills exactly as in a lake that never slept
+  (L1 0, hole depth equal). Stability (10,000 s lake, 20,000 s river, 2,000 s swell, dam break, pit dig, stress) and 1,000
+  fuzz sequences pass in wet and sleep modes, books 0 dL.
+- **Not solved: stirred water does not fall back asleep.** After that dig the lake keeps sloshing: 4 of 136 blocks asleep
+  after 600 water-s, 8 of 136 after 3,000 (50 real minutes at speed 1); a sleep threshold 200 times looser (3e-3) gets only
+  28 of 136. The scheme barely damps waves in deep water. Filed: `RIMMANDRAKE_SETTLE_DISTURBED_LAKES_STILL_SLOSH_FIFTY_MINUTES_ON`.
+- Slow forcing (evaporation, groundwater) acts on sleeping water without waking it; a body whose level the calendar changes
+  unevenly must be woken by the game's own booking (not built). Sources, level-setters, rain and groundwater below its table
+  pin their blocks awake.
