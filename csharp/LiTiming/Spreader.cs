@@ -6,8 +6,10 @@ namespace LiTiming
     /// Spreads each 12-tick recompute's work over its 12 ticks (stage C finding: unspread, the whole recompute lands in one
     /// tick, 17 to 20 ms on the 325 stress load). A recompute is k equal substeps (k = ceil(0.2 s / CFL dt), fixed at the
     /// recompute's start: a ragged split makes local-inertial slosh); each substep is four passes over the active blocks
-    /// (faces, limit, move, then the step's end, counted as one more pass). Each tick does its share of the work left,
-    /// counted in block-passes, so the last tick of a recompute always finishes it.
+    /// (faces, limit, move, then the step's end). Each tick does its share of the work left, counted in block-passes
+    /// weighted by what each pass costs (Unity Mono profile, 2026-11-14: faces ~87% of a step on the 325 river and stress
+    /// loads, move ~8%, limit, clear and refresh ~1 to 2% each), so the last tick of a recompute always finishes it. The
+    /// step's end (clear, forcing, wet flags) is one indivisible piece.
     ///
     /// Water is bitwise the same as running the recompute in one go (the harness checks it): pass 1 reads only the
     /// previous state, and a pass is never interleaved with another substep. Between ticks the water is mid-step
@@ -22,6 +24,8 @@ namespace LiTiming
         int tick = Ticks;            // ticks done in the current recompute (Ticks = none running)
         int k, sub, phase, cursor;   // substeps this recompute, substep index, pass 0..3, next active block in the pass
         double dt;
+        static readonly int[] Weight = { 16, 1, 2, 2 };   // per active block: faces, limit, move, step end
+        const int PerStep = 21;
 
         public Spreader(LocalInertialDL m, double recompute = 0.2, double dtCap = 5.0)
         {
@@ -60,30 +64,33 @@ namespace LiTiming
             }
             int ticksLeft = Ticks - tick;
             tick++;
-            if (sub >= k) return tick == Ticks;          // finished early (cannot happen: the last tick takes the rest)
-            // work left, in block-passes; later substeps are estimated at today's active count
-            long n = m.ActiveBlocks;
-            long left = (n * (4 - phase) - cursor) + (long)(k - sub - 1) * 4 * Math.Max(n, 1);
+            if (sub >= k) return tick == Ticks;          // finished early (the weighted shares round up): idle until the recompute ends
+            // work left, in weighted block-passes; later substeps are estimated at today's active count
+            long n = Math.Max(m.ActiveBlocks, 1);
+            long left = (long)Weight[phase] * (n - cursor);
+            for (int p = phase + 1; p < 4; p++) left += (long)Weight[p] * n;
+            left += (long)(k - sub - 1) * PerStep * n;
             long budget = ticksLeft <= 1 ? long.MaxValue : (left + ticksLeft - 1) / ticksLeft;
             while (budget > 0 && sub < k)
             {
-                n = m.ActiveBlocks;
+                int na = m.ActiveBlocks;
                 if (phase == 3)
                 {
                     m.EndStep();
-                    budget -= Math.Max(n, 1);
+                    budget -= (long)Weight[3] * Math.Max(na, 1);
                     phase = 0; cursor = 0; sub++;
                     if (sub < k) m.BeginStep(dt);
                     continue;
                 }
-                int take = (int)Math.Min(budget, n - cursor);
+                long w = Weight[phase];
+                int take = (int)Math.Min(na - cursor, budget == long.MaxValue ? na : (budget + w - 1) / w);
                 int a1 = cursor + take;
                 if (phase == 0) m.FacesRange(cursor, a1);
                 else if (phase == 1) m.LimitRange(cursor, a1);
                 else m.MoveRange(cursor, a1);
-                budget -= Math.Max(take, 1);
+                budget -= Math.Max(take, 1) * w;
                 cursor = a1;
-                if (cursor >= n) { phase++; cursor = 0; }
+                if (cursor >= na) { phase++; cursor = 0; }
             }
             return tick == Ticks;
         }

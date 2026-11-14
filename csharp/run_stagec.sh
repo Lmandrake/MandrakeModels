@@ -3,6 +3,9 @@
 #   bash csharp/run_stagec.sh            (from the MandrakeModels root)
 #   REF=local_inertial bash csharp/run_stagec.sh                  the uncapped reference (stage C as first measured)
 #   STEPS=fidelity,timing SIZES=250,325 bash csharp/run_stagec.sh  a subset; timing on the sizes exported
+#   steps: fidelity (40 rows vs Python; a sleeping twin within the same tolerances), timing (modes full, wet, sleep),
+#   spread (each recompute over its 12 ticks, bitwise against whole), settled (sleeping lake bar), wake (a dig into
+#   sleeping water flows as in water that never slept), stability, fuzz
 #   LITIMING_MUTATE=frcap1 STEPS=fidelity OUT=... bash csharp/run_stagec.sh   a planted fault (passed to Windows too)
 # REF names the Python reference solver (default local_inertial_frcap, the chosen engine). Its face Froude cap travels in
 # the scene files, so the C# runs the same scheme. Scenes come from `python -m mandrakemodels.csharp_export --solver $REF`
@@ -11,7 +14,7 @@
 set -uo pipefail
 STAGEC=${STAGEC:-/mnt/d/ClaudeWork/mandrakemodels/stagec}
 REF=${REF:-local_inertial_frcap}
-STEPS=${STEPS:-fidelity,timing,stability,fuzz}
+STEPS=${STEPS:-fidelity,timing,spread,settled,wake,stability,fuzz}
 SIZES=${SIZES:-250,325,400}
 W=$(wslpath -w "$STAGEC")
 DOTNET=${DOTNET:-/mnt/c/Users/Mandrake/.dotnet/dotnet.exe}
@@ -47,16 +50,31 @@ fi
 if has timing; then
   rm -f "$O/timing_final.csv"
   for rep in 1 2; do
-    mono timing "$WLD" "$WO\\timing_final.csv" --label "unity_mono_6.13 r$rep" > "$O/timing_mono_r$rep.log" 2>&1; step "timing mono r$rep"
+    mono timing "$WLD" "$WO\\timing_final.csv" --modes full,wet,sleep --label "unity_mono_6.13 r$rep" > "$O/timing_mono_r$rep.log" 2>&1; step "timing mono r$rep"
   done
   net8 timing "$WLD" "$WO\\timing_final.csv" --label "net8 r1" > "$O/timing_net8_r1.log" 2>&1; step "timing net8"
   netfx timing "$WLD" "$WO\\timing_final.csv" --label "netfx48 r1" > "$O/timing_netfx_r1.log" 2>&1; step "timing netfx"
+fi
+if has spread; then
+  rm -f "$O/spread_mono.csv"
+  mono spread "$WLD" "$WO\\spread_mono.csv" --modes wet,sleep > "$O/spread_mono.log" 2>&1 || rc=1; step "spread mono: $(tail -1 "$O/spread_mono.log")"
+fi
+if has settled; then
+  rm -f "$O/settled_mono.csv"
+  mono settled "$WLD" "$WO\\settled_mono.csv" > "$O/settled_mono.log" 2>&1 || rc=1; step "settled mono: $(tail -1 "$O/settled_mono.log")"
+fi
+if has wake; then
+  rm -f "$O/wake_mono.jsonl"
+  for f in lake_at_rest_250 lake_at_rest_325; do
+    mono wake "$WLD\\$f.lis" "$WO\\wake_mono.jsonl" > "$O/wake_mono_$f.log" 2>&1 || rc=1
+  done; step "wake mono: $(tail -1 "$O/wake_mono_lake_at_rest_325.log")"
 fi
 if has stability; then
   rm -f "$O/stability_mono.jsonl" "$O/stability_net8.jsonl"
   mono stability "$WLD" "$WO\\stability_mono.jsonl" --only lake_at_rest > "$O/stability_mono.log" 2>&1 || rc=1
   mono stability "$WLD" "$WO\\stability_mono.jsonl" --only river > "$O/stability_mono_river.log" 2>&1 || rc=1; step "stability mono (lake, river)"
   net8 stability "$WLD" "$WO\\stability_net8.jsonl" > "$O/stability_net8.log" 2>&1 || rc=1; step "stability net8: $(tail -1 "$O/stability_net8.log")"
+  net8 stability "$WLD" "$WO\\stability_net8.jsonl" --modes sleep > "$O/stability_net8_sleep.log" 2>&1 || rc=1; step "stability net8 sleep: $(tail -1 "$O/stability_net8_sleep.log")"
 fi
 if has fuzz; then
   mono fuzz "$WSC\\river_128.lis" "$WO\\fuzz_mono.jsonl" --seqs 1000 > "$O/fuzz_mono.log" 2>&1 || rc=1; step "fuzz mono: $(tail -1 "$O/fuzz_mono.log")"
