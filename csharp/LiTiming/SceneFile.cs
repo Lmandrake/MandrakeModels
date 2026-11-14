@@ -4,12 +4,15 @@ using System.IO;
 
 namespace LiTiming
 {
-    /// <summary>A scene exported by <c>mandrakemodels.csharp_export</c> (format "LIS1", little-endian).</summary>
+    /// <summary>A scene exported by <c>mandrakemodels.csharp_export</c> (format "LIS2", little-endian; "LIS1" lacks FrMax and
+    /// reads as uncapped).</summary>
     public sealed class SceneFile
     {
         public string Name;
         public int Ny, Nx;
         public double Dx, Manning, Theta, Alpha, Duration;
+        /// <summary>The reference solver's face Froude cap; 0 = none (plain local_inertial).</summary>
+        public double FrMax;
         public double[] Z, H;
         public bool[] Wall;
         public double Evaporation, Rain;
@@ -27,9 +30,10 @@ namespace LiTiming
             using (var r = new BinaryReader(File.OpenRead(path)))
             {
                 var magic = new string(r.ReadChars(4));
-                if (magic != "LIS1") throw new InvalidDataException(path + ": not a LIS1 file");
+                if (magic != "LIS1" && magic != "LIS2") throw new InvalidDataException(path + ": not a LIS1/LIS2 file");
                 s.Ny = r.ReadInt32(); s.Nx = r.ReadInt32();
                 s.Dx = r.ReadDouble(); s.Manning = r.ReadDouble(); s.Theta = r.ReadDouble(); s.Alpha = r.ReadDouble();
+                if (magic == "LIS2") s.FrMax = r.ReadDouble();
                 s.Duration = r.ReadDouble();
                 int n = s.Ny * s.Nx;
                 s.Z = Doubles(r, n); s.H = Doubles(r, n); s.Wall = Mask(r, n);

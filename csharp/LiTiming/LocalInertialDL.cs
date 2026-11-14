@@ -26,6 +26,10 @@ namespace LiTiming
         public readonly int Ny, Nx;
         public readonly double Dx, Area, MPerDl;  // MPerDl: metres of depth per dL in one square
         public double Manning, Theta, Alpha;
+        /// <summary>Face Froude cap (MandrakeModels <c>local_inertial_frcap</c>): every face discharge, after friction, is
+        /// clipped to FrMax * h_f * sqrt(g h_f), h_f the Bates face depth; the clipped value is what moves and what the face
+        /// remembers. 0.544 = (2/3)^1.5 is the critical-flow (broad-crested weir) discharge. 0 = no cap.</summary>
+        public double FrMax;
         public double T;
         public long Steps;
         public bool WetOnly;
@@ -57,6 +61,7 @@ namespace LiTiming
         public long V0;
         public int MinVSeen;
         public long LimitedFaces;
+        public long CappedFaces;      // faces the Froude cap clipped, summed over every step
 
         // blocks
         readonly int nbx, nby;
@@ -66,10 +71,10 @@ namespace LiTiming
         int vmax;
 
         public LocalInertialDL(int ny, int nx, double dx, double[] z, double[] h, bool[] wall,
-                               double manning = 0.03, double theta = 0.8, double alpha = 0.6)
+                               double manning = 0.03, double theta = 0.8, double alpha = 0.6, double frMax = 0)
         {
             Ny = ny; Nx = nx; Dx = dx; Area = dx * dx; MPerDl = 1.0 / (Area * DlPerM3);
-            Manning = manning; Theta = theta; Alpha = alpha;
+            Manning = manning; Theta = theta; Alpha = alpha; FrMax = frMax;
             int n = ny * nx;
             Z = (double[])z.Clone();
             V = new int[n];
@@ -100,11 +105,13 @@ namespace LiTiming
 
         public static LocalInertialDL FromScene(SceneFile s)
         {
-            var m = new LocalInertialDL(s.Ny, s.Nx, s.Dx, s.Z, s.H, s.Wall, s.Manning, s.Theta, s.Alpha);
+            var m = new LocalInertialDL(s.Ny, s.Nx, s.Dx, s.Z, s.H, s.Wall, s.Manning, s.Theta, s.Alpha, s.FrMax);
             // planted faults, for proving the fidelity checker goes red (never set in a measured run)
             var mut = Environment.GetEnvironmentVariable("LITIMING_MUTATE") ?? "";
             if (mut == "manning") m.Manning *= 1.3;
             if (mut == "theta") m.Theta = 1.0;
+            if (mut == "frcap1" && m.FrMax > 0) m.FrMax = 1.0;   // a weaker cap than the reference's 0.544
+            if (mut == "nocap") m.FrMax = 0;                      // the uncapped scheme against a capped reference
             if (mut == "nocbrt") NoCbrt = true;        // timing probe only: wrong friction
             if (mut == "walldelete") MutateWallDeletes = true;
             foreach (var (mask, q) in s.Sources) m.Sources.Add((Cells(mask, m.Open), q, 0.0));
@@ -275,7 +282,9 @@ namespace LiTiming
         unsafe void Faces(double inv, double n2, double th, double toDl, double gdt, double gdtdx, double half1mth)
         {
             int nx = Nx, ny = Ny, nfx = Nx - 1, sx = Nx + 1;
-            bool noCbrt = NoCbrt;
+            bool noCbrt = NoCbrt, cap = FrMax > 0;
+            double frSqrtG = FrMax * Math.Sqrt(G);
+            long capped = 0;
             fixed (double* z = Z, qx = this.qx, qy = this.qy, nqx = this.nqx, nqy = this.nqy, rx = this.rx, ry = this.ry)
             fixed (int* v = V, fx = this.fx, fy = this.fy, outf = this.outf)
             fixed (bool* openX = this.openX, openY = this.openY)
@@ -311,6 +320,11 @@ namespace LiTiming
                                         double mag = Math.Sqrt(q0 * q0 + qc * qc);
                                         double h73 = noCbrt ? hf * hf * hf : hf * hf * Cbrt(hf);
                                         double nq = (qt - gdtdx * hf * (er - ec)) / (1 + gdt * n2 * mag / h73);
+                                        if (cap)
+                                        {
+                                            double qm = frSqrtG * hf * Math.Sqrt(hf);
+                                            if (nq > qm) { nq = qm; capped++; } else if (nq < -qm) { nq = -qm; capped++; }
+                                        }
                                         nqx[f] = nq;
                                         double tt = nq * toDl + rx[f];
                                         int fi = (int)(tt >= 0 ? tt + 0.5 : tt - 0.5);
@@ -340,6 +354,11 @@ namespace LiTiming
                                         double mag = Math.Sqrt(q0 * q0 + qc * qc);
                                         double h73 = noCbrt ? hf * hf * hf : hf * hf * Cbrt(hf);
                                         double nq = (qt - gdtdx * hf * (ed - ec)) / (1 + gdt * n2 * mag / h73);
+                                        if (cap)
+                                        {
+                                            double qm = frSqrtG * hf * Math.Sqrt(hf);
+                                            if (nq > qm) { nq = qm; capped++; } else if (nq < -qm) { nq = -qm; capped++; }
+                                        }
                                         nqy[f] = nq;
                                         double tt = nq * toDl + ry[f];
                                         int fi = (int)(tt >= 0 ? tt + 0.5 : tt - 0.5);
@@ -353,6 +372,7 @@ namespace LiTiming
                     }
                 }
             }
+            CappedFaces += capped;
         }
 
         /// <summary>Pick the blocks to step: all (full grid) or wet blocks plus pinned ones, dilated by one block.
