@@ -30,10 +30,22 @@ namespace LiTiming
         /// clipped to FrMax * h_f * sqrt(g h_f), h_f the Bates face depth; the clipped value is what moves and what the face
         /// remembers. 0.544 = (2/3)^1.5 is the critical-flow (broad-crested weir) discharge. 0 = no cap.</summary>
         public double FrMax;
+        /// <summary>Surface differences within this many dL of depth count as flat (no pressure push). Rounding each
+        /// square to whole dL leaves a flat surface up to half a dL off in each square, so up to 1 dL apart across a face:
+        /// without the band that noise drives a slosh that never damps in deep water (lake at rest: 0.2 mm, and it never
+        /// settles enough to sleep). 0 = off.</summary>
+        public double DeadbandDl = 1.0;
         public double T;
         public long Steps;
         public bool WetOnly;
         public bool GroundwaterBothWays;
+        /// <summary>Settled water sleeps: a block whose faces all carried |q| &lt;= SleepQ for SleepAfter water-s, and that
+        /// no forcing pins, stops being stepped (with WetOnly, its wet flag no longer keeps its neighbours stepped). It wakes
+        /// when a stepped neighbour's shared face carries more than SleepQ, or an edit (dig, bed raise, wall) touches it or a
+        /// neighbouring block. Slow forcing (evaporation, groundwater) still acts on sleeping water without waking it.
+        /// Default SleepQ 1.4e-5 m^2/s: on a 1.414 m face, 1 dL per 5 water-s.</summary>
+        public bool Sleep;
+        public double SleepQ = 1.4e-5, SleepAfter = 1.0;
 
         public readonly double[] Z;
         public readonly int[] V;
@@ -65,7 +77,8 @@ namespace LiTiming
 
         // blocks
         readonly int nbx, nby;
-        readonly bool[] blockWet, blockActive, blockActivePrev, blockPinned;
+        readonly bool[] blockWet, blockActive, blockActivePrev, blockPinned, blockMotion;
+        readonly double[] quiet;          // water-s each block has been still (sleep clock)
         readonly int[] activeList;
         int nActive;
         int vmax;
@@ -91,7 +104,7 @@ namespace LiTiming
             outf = new int[n]; lim = new int[n];
             nbx = (nx + B - 1) / B; nby = (ny + B - 1) / B;
             blockWet = new bool[nbx * nby]; blockActive = new bool[nbx * nby]; blockActivePrev = new bool[nbx * nby];
-            blockPinned = new bool[nbx * nby];
+            blockPinned = new bool[nbx * nby]; blockMotion = new bool[nbx * nby]; quiet = new double[nbx * nby];
             activeList = new int[nbx * nby];
             RebuildOpenFaces();
             for (int b = 0; b < blockActivePrev.Length; b++) blockActivePrev[b] = true;
@@ -114,6 +127,10 @@ namespace LiTiming
             if (mut == "nocap") m.FrMax = 0;                      // the uncapped scheme against a capped reference
             if (mut == "nocbrt") NoCbrt = true;        // timing probe only: wrong friction
             if (mut == "walldelete") MutateWallDeletes = true;
+            if (mut == "nowake") MutateNoWake = true;
+            if (mut == "nodeadband") m.DeadbandDl = 0;
+            var sq = Environment.GetEnvironmentVariable("LITIMING_SLEEPQ");        // probe: sleep threshold, m^2/s
+            if (!string.IsNullOrEmpty(sq)) m.SleepQ = double.Parse(sq, System.Globalization.CultureInfo.InvariantCulture);            // stage C as first built: rounding noise drives a slosh          // planted fault: edits do not wake sleeping water
             foreach (var (mask, q) in s.Sources) m.Sources.Add((Cells(mask, m.Open), q, 0.0));
             foreach (var (mask, rate) in s.Sinks) m.Sinks.Add((Cells(mask, m.Open), rate));
             foreach (var (mask, kind, a, b) in s.Levels) m.Levels.Add((Cells(mask, m.Open), kind, a, b));
@@ -172,29 +189,52 @@ namespace LiTiming
 
         // ------------------------------------------------------------------------------------------------- the step
         /// <summary>Per-phase Stopwatch ticks (select, faces, limit, move, clear, forcing, refresh) when Profile is set.</summary>
-        public static bool Profile, NoCbrt, MutateWallDeletes;
+        public static bool Profile, NoCbrt, MutateWallDeletes, MutateNoWake;
         public static readonly long[] Prof = new long[7];
         static long Mark(int k, long t0) { long t = System.Diagnostics.Stopwatch.GetTimestamp(); Prof[k] += t - t0; return t; }
 
+        /// <summary>One step. The same work is also callable in pieces (BeginStep, FacesRange, LimitRange, MoveRange,
+        /// EndStep, each range over the active-block list) so a recompute can be spread over its 12 ticks; any split gives
+        /// bitwise the same water, because pass 1 reads only the previous state and every face moves once.</summary>
         public void Step(double dt)
         {
             long pt = Profile ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
-            SelectBlocks();
+            BeginStep(dt);
             if (Profile) pt = Mark(0, pt);
-            double inv = MPerDl, n2 = Manning * Manning, th = Theta, toDl = Dx * dt * DlPerM3;
-            double gdt = G * dt, gdtdx = G * dt / Dx, half1mth = 0.5 * (1 - th);
-            int nx = Nx, ny = Ny, nfx = Nx - 1;
-            // Math.Max and Math.Floor are avoided in the face loop: under Unity's Mono they are not inlined.
-            // every array in a local: Mono reloads a field on each access and cannot hoist it out of the loop
-            var z = Z; var v = V; var qx = this.qx; var qy = this.qy; var nqx = this.nqx; var nqy = this.nqy;
-            var rx = this.rx; var ry = this.ry; var fx = this.fx; var fy = this.fy; var outf = this.outf; var lim = this.lim;
-            var openX = this.openX; var openY = this.openY; var activeList = this.activeList; int nbx = this.nbx, nActive = this.nActive;
-
-            // pass 1: new discharge on every face of an active block (reads only previous q), integer flux, donor outflow
-            Faces(inv, n2, th, toDl, gdt, gdtdx, half1mth);
+            FacesRange(0, nActive);
             if (Profile) pt = Mark(1, pt);
-            // pass 2: donors asked for more than they hold are limited to what they hold (snapshot before any move)
-            for (int a = 0; a < nActive; a++)
+            LimitRange(0, nActive);
+            if (Profile) pt = Mark(2, pt);
+            MoveRange(0, nActive);
+            if (Profile) pt = Mark(3, pt);
+            EndStep(pt);
+        }
+
+        double stepDt;
+        long limitedAcc;
+
+        public void BeginStep(double dt)
+        {
+            SelectBlocks();
+            stepDt = dt;
+            limitedAcc = 0;
+        }
+
+        /// <summary>Pass 1: new discharge on every face of active blocks a0..a1 (reads only previous q), integer flux,
+        /// donor outflow.</summary>
+        public void FacesRange(int a0, int a1)
+        {
+            double dt = stepDt, th = Theta;
+            Faces(a0, a1, MPerDl, Manning * Manning, th, Dx * dt * DlPerM3, G * dt, G * dt / Dx, 0.5 * (1 - th));
+        }
+
+        /// <summary>Pass 2: donors asked for more than they hold are limited to what they hold (snapshot before any move).
+        /// Needs pass 1 done on every active block.</summary>
+        public void LimitRange(int a0, int a1)
+        {
+            int nx = Nx, ny = Ny, nbx = this.nbx;
+            var v = V; var outf = this.outf; var lim = this.lim; var activeList = this.activeList;
+            for (int a = a0; a < a1; a++)
             {
                 int b = activeList[a], bj = b / nbx, bi = b % nbx;
                 int j0 = bj * B, j1 = Math.Min(j0 + B, ny), i0 = bi * B, i1 = Math.Min(i0 + B, nx);
@@ -202,14 +242,24 @@ namespace LiTiming
                     for (int c = j * nx + i0, ce = j * nx + i1; c < ce; c++)
                         lim[c] = outf[c] > v[c] ? v[c] : -1;
             }
+        }
 
-            if (Profile) pt = Mark(2, pt);
-            // pass 3: move whole dL once per face, opposite signs; store discharge memory
+        /// <summary>Pass 3: move whole dL once per face, opposite signs; store discharge memory; note which blocks moved
+        /// (a face discharge over SleepQ marks the blocks on both sides). Needs pass 2 done on every active block.</summary>
+        public void MoveRange(int a0, int a1)
+        {
+            int nx = Nx, ny = Ny, nfx = Nx - 1, nbx = this.nbx;
+            // every array in a local: Mono reloads a field on each access and cannot hoist it out of the loop
+            var v = V; var qx = this.qx; var qy = this.qy; var nqx = this.nqx; var nqy = this.nqy;
+            var rx = this.rx; var ry = this.ry; var fx = this.fx; var fy = this.fy; var outf = this.outf; var lim = this.lim;
+            var activeList = this.activeList; var motion = blockMotion;
+            bool sleep = Sleep; double qs = SleepQ;
             long limited = 0;
-            for (int a = 0; a < nActive; a++)
+            for (int a = a0; a < a1; a++)
             {
                 int b = activeList[a], bj = b / nbx, bi = b % nbx;
                 int j0 = bj * B, j1 = Math.Min(j0 + B, ny), i0 = bi * B, i1 = Math.Min(i0 + B, nx);
+                bool mot = false;
                 for (int j = j0; j < j1; j++)
                 {
                     int row = j * nx, frow = j * nfx;
@@ -235,6 +285,7 @@ namespace LiTiming
                                 v[c] -= fi; v[c + 1] += fi;
                             }
                             qx[f + 2 * j + 1] = nq;
+                            if (sleep && (nq > qs || nq < -qs)) { mot = true; if (i == i1 - 1) motion[b + 1] = true; }
                         }
                         if (j < ny - 1)
                         {
@@ -248,48 +299,61 @@ namespace LiTiming
                                     int mag = fi > 0 ? fi : -fi;
                                     int cut = (int)((long)mag * lim[d] / outf[d]);
                                     fi = fi > 0 ? cut : -cut;
-                                    // memory scaled with the cut, as the float limiter does; never fi/(dx dt), which a
-                                    // whole dL rounded up from a short step turns into a huge discharge
                                     nq *= (double)cut / mag; ry[f] = 0; limited++;
                                 }
                                 v[c] -= fi; v[c + nx] += fi;
                             }
                             qy[f + nx] = nq;
+                            if (sleep && (nq > qs || nq < -qs)) { mot = true; if (j == j1 - 1) motion[b + nbx] = true; }
                         }
                     }
                 }
+                if (mot) motion[b] = true;
             }
-            LimitedFaces = limited;
-            if (Profile) pt = Mark(3, pt);
+            limitedAcc += limited;
+        }
+
+        /// <summary>Clear donor outflow, forcing, clock, wet flags, and the sleep clocks.</summary>
+        public void EndStep(long pt = 0)
+        {
+            int nx = Nx, ny = Ny, nbx = this.nbx;
+            LimitedFaces = limitedAcc;
             for (int a = 0; a < nActive; a++)
             {
                 int b = activeList[a], bj = b / nbx, bi = b % nbx;
                 int j0 = bj * B, j1 = Math.Min(j0 + B, ny), i0 = bi * B, i1 = Math.Min(i0 + B, nx);
                 for (int j = j0; j < j1; j++) Array.Clear(outf, j * nx + i0, i1 - i0);
             }
-
             if (Profile) pt = Mark(4, pt);
+            double dt = stepDt;
             ApplyForcing(dt);
             if (Profile) pt = Mark(5, pt);
             T += dt;
             Steps++;
             RefreshWetAndMax(all: false);
+            if (Sleep)
+                for (int b = 0; b < quiet.Length; b++)
+                {
+                    if (blockMotion[b] || blockPinned[b]) { quiet[b] = 0; blockMotion[b] = false; }
+                    else if (blockActive[b]) quiet[b] += dt;
+                }
             if (Profile) Mark(6, pt);
         }
 
         /// <summary>Pass 1 through raw pointers on the padded q layout: no bounds checks and no edge tests inside a face.
         /// Unity's Mono allocates registers per basic block, so every branch removed from this loop is a spill saved.</summary>
-        unsafe void Faces(double inv, double n2, double th, double toDl, double gdt, double gdtdx, double half1mth)
+        unsafe void Faces(int a0, int a1, double inv, double n2, double th, double toDl, double gdt, double gdtdx, double half1mth)
         {
             int nx = Nx, ny = Ny, nfx = Nx - 1, sx = Nx + 1;
             bool noCbrt = NoCbrt, cap = FrMax > 0;
+            double db = DeadbandDl * inv * (1 + 1e-9);
             double frSqrtG = FrMax * Math.Sqrt(G);
             long capped = 0;
             fixed (double* z = Z, qx = this.qx, qy = this.qy, nqx = this.nqx, nqy = this.nqy, rx = this.rx, ry = this.ry)
             fixed (int* v = V, fx = this.fx, fy = this.fy, outf = this.outf)
             fixed (bool* openX = this.openX, openY = this.openY)
             {
-                for (int a = 0; a < nActive; a++)
+                for (int a = a0; a < a1; a++)
                 {
                     int b = activeList[a], bj = b / nbx, bi = b % nbx;
                     int j0 = bj * B, j1 = j0 + B < ny ? j0 + B : ny, i0 = bi * B, i1 = i0 + B < nx ? i0 + B : nx;
@@ -319,7 +383,9 @@ namespace LiTiming
                                         double qc = 0.25 * (qy[c] + qy[c + nx] + qy[c + 1] + qy[c + 1 + nx]);
                                         double mag = Math.Sqrt(q0 * q0 + qc * qc);
                                         double h73 = noCbrt ? hf * hf * hf : hf * hf * Cbrt(hf);
-                                        double nq = (qt - gdtdx * hf * (er - ec)) / (1 + gdt * n2 * mag / h73);
+                                        double de = er - ec;
+                                        if (de <= db && de >= -db) de = 0;
+                                        double nq = (qt - gdtdx * hf * de) / (1 + gdt * n2 * mag / h73);
                                         if (cap)
                                         {
                                             double qm = frSqrtG * hf * Math.Sqrt(hf);
@@ -353,7 +419,9 @@ namespace LiTiming
                                         double qc = 0.25 * (xp[0] + xp[1] + xp[sx] + xp[sx + 1]);
                                         double mag = Math.Sqrt(q0 * q0 + qc * qc);
                                         double h73 = noCbrt ? hf * hf * hf : hf * hf * Cbrt(hf);
-                                        double nq = (qt - gdtdx * hf * (ed - ec)) / (1 + gdt * n2 * mag / h73);
+                                        double de = ed - ec;
+                                        if (de <= db && de >= -db) de = 0;
+                                        double nq = (qt - gdtdx * hf * de) / (1 + gdt * n2 * mag / h73);
                                         if (cap)
                                         {
                                             double qm = frSqrtG * hf * Math.Sqrt(hf);
@@ -392,7 +460,7 @@ namespace LiTiming
                                 int y = bj + dj, x = bi + di;
                                 if (y < 0 || y >= nby || x < 0 || x >= nbx) continue;
                                 int k = y * nbx + x;
-                                if (blockWet[k] || blockPinned[k]) { act = true; break; }
+                                if (blockWet[k] && (!Sleep || quiet[k] < SleepAfter) || blockPinned[k]) { act = true; break; }
                             }
                     if (!act && blockActivePrev[b]) ClearBlockFaces(b);
                     blockActive[b] = act;
@@ -414,6 +482,18 @@ namespace LiTiming
         }
 
         public int ActiveBlocks => nActive;
+        public int Blocks => quiet.Length;
+        /// <summary>Wet blocks asleep now (a count for the harness).</summary>
+        public int SleepingBlocks { get { int n = 0; if (Sleep) for (int b = 0; b < quiet.Length; b++) if (blockWet[b] && quiet[b] >= SleepAfter) n++; return n; } }
+
+        /// <summary>Wake the block holding square c and its eight neighbours (an edit there).</summary>
+        public void Wake(int c)
+        {
+            int bj = c / Nx / B, bi = (c % Nx) / B;
+            for (int y = bj - 1; y <= bj + 1; y++)
+                for (int x = bi - 1; x <= bi + 1; x++)
+                    if (y >= 0 && y < nby && x >= 0 && x < nbx) quiet[y * nbx + x] = 0;
+        }
 
         void RefreshWetAndMax(bool all)
         {
@@ -498,9 +578,13 @@ namespace LiTiming
                 if (each > 0)
                 {
                     long tot = 0;
-                    for (int a = 0; a < nActive; a++)
+                    // sleeping water evaporates too: with Sleep, every wet block, not just the stepped ones
+                    int na = Sleep ? blockWet.Length : nActive;
+                    for (int a = 0; a < na; a++)
                     {
-                        int b = activeList[a], bj = b / nbx, bi = b % nbx;
+                        int b = Sleep ? a : activeList[a];
+                        if (Sleep && !blockWet[b]) continue;
+                        int bj = b / nbx, bi = b % nbx;
                         int j0 = bj * B, j1 = Math.Min(j0 + B, Ny), i0 = bi * B, i1 = Math.Min(i0 + B, Nx);
                         for (int j = j0; j < j1; j++)
                             for (int c = j * Nx + i0, ce = j * Nx + i1; c < ce; c++)
@@ -539,11 +623,12 @@ namespace LiTiming
         /// <summary>Lower the bed; each square keeps its water (its surface drops).</summary>
         public void Dig(bool[] mask, double[] depth)
         {
-            for (int c = 0; c < Z.Length; c++) if (mask[c]) Z[c] -= depth[c];
+            for (int c = 0; c < Z.Length; c++) if (mask[c]) { Z[c] -= depth[c]; if (Sleep && !MutateNoWake) Wake(c); }
             RefreshWetAndMax(all: true);
         }
 
-        public void RaiseBed(int c, double height) { Z[c] += height; }
+        /// <summary>Raise (or, negative, lower) the bed; the square keeps its water.</summary>
+        public void RaiseBed(int c, double height) { Z[c] += height; if (Sleep && !MutateNoWake) Wake(c); }
 
         /// <summary>Wall a square. Its water is pushed to open neighbours (nearest first, breadth-first), never deleted;
         /// if no open square is reachable the wall is refused.</summary>
@@ -573,7 +658,7 @@ namespace LiTiming
                 }
                 if (ring.Count == 0) { Open[c0] = true; return false; }
                 int each = w / ring.Count, rem = w % ring.Count;
-                for (int k = 0; k < ring.Count; k++) V[ring[k]] += each + (k < rem ? 1 : 0);
+                for (int k = 0; k < ring.Count; k++) { V[ring[k]] += each + (k < rem ? 1 : 0); if (Sleep) Wake(ring[k]); }
                 V[c0] = 0;
             }
             AfterWallChange(c0);
@@ -590,6 +675,7 @@ namespace LiTiming
 
         void AfterWallChange(int c)
         {
+            if (Sleep && !MutateNoWake) Wake(c);
             int j = c / Nx, i = c % Nx;
             if (i < Nx - 1) { int f = j * (Nx - 1) + i; openX[f] = Open[c] && Open[c + 1]; qx[f + 2 * j + 1] = 0; rx[f] = 0; }
             if (i > 0) { int f = j * (Nx - 1) + i - 1; openX[f] = Open[c - 1] && Open[c]; qx[f + 2 * j + 1] = 0; rx[f] = 0; }
