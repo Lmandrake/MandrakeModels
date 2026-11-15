@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 
 MODULES = [
-    "ca_game", "wca2d", "pipes", "local_inertial", "kinematic", "diffusion_explicit",
+    "ca_game", "wca2d", "pipes", "local_inertial", "local_inertial_ripples", "kinematic", "diffusion_explicit",
     "diffusion_implicit", "swe_hll", "swe_lbm", "linear_wave", "heat", "stable_fluids", "lbm_d2q9",
 ]
 
