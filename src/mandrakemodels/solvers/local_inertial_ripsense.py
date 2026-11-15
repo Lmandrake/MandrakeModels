@@ -1,6 +1,6 @@
 """local_inertial_frcap with a ripple detector and surface diffusion ONLY where it fires (2026-11-14).
 
-Item RIMMANDRAKE_TRY_RIPPLE_DETECTOR_TREAT_ONLY_WHERE_IT_RIPPLES; the owner's idea: "I also wonder if the ripples are
+The author's idea: "I also wonder if the ripples are
 detectable and thus could be fixed with a local treatment that only happens when needed for efficiency."
 Kept self-contained (the global dampers live in a sibling's file); the original engines are untouched.
 """
@@ -53,6 +53,7 @@ def lap4(e, wet):
 
 def ripple_flags(s, rough=1.5e-4, slow_fr=0.2):
     """The detector: wet cells whose 3x3-mean surface roughness |eta - mean(4 neighbours)| exceeds ``rough`` (m) while
+    the local flow is slow (cell Froude below ``slow_fr``)."""
     wet = (s.h > WET) & ~s.wall
     lp = ndimage.uniform_filter(lap4(s.eta, wet), 3, mode="constant")
     u, v = s.velocity()

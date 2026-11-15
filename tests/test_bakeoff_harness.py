@@ -1,4 +1,4 @@
-"""Harness fixes from the stage-2 review (RIMMANDRAKE_HARDEN_FAST_WATER_SOLVERS_VIA_GPT_PIPES_RING)."""
+"""Harness fixes from the stage-2 review (results/stage2.md)."""
 import math
 import time
 

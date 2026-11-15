@@ -1,6 +1,6 @@
 """local_inertial_frcap_ripsense: a ripple detector plus surface diffusion only where it fires (2026-11-14).
 
-Item RIMMANDRAKE_TRY_RIPPLE_DETECTOR_TREAT_ONLY_WHERE_IT_RIPPLES. Pinned numbers are the swe_hll referee's, measured
+Pinned numbers are the swe_hll referee's, measured
 2026-11-14: reservoir roughness at 32.7 s 1.84e-4 m, pit_dig 128 mean pit depth at 150 s 0.418 m.
 """
 import numpy as np

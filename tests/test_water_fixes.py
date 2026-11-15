@@ -1,4 +1,4 @@
-"""Regression tests for the stage-2 review fixes (RIMMANDRAKE_HARDEN_FAST_WATER_SOLVERS_VIA_GPT_PIPES_RING).
+"""Regression tests for the stage-2 review fixes (results/stage2.md).
 
 Each defect is pinned twice where a solver fix became a new competitor: the original solver is a strict xfail (the
 defect is still there, unchanged on purpose), the new competitor must pass. Harness fixes are plain tests.

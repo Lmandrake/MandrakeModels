@@ -68,8 +68,7 @@ that the checks go red. `nocbrt` is a timing probe.
 ## Running it
 
 `run_stagec.sh` was written for one setup: WSL on Windows, building with a Windows `dotnet.exe`, and running
-Mono from a Windows Python against a local RimWorld install. Its defaults name paths on the author's machine
-(`STAGEC=/mnt/d/...`, `DOTNET=/mnt/c/Users/...`). To use it elsewhere, set:
+Mono from a Windows Python against a local RimWorld install. It has no machine defaults and stops by name unless `STAGEC` and `DOTNET` are set. Variables:
 
 - `STAGEC`: the work and output directory
 - `DOTNET`: the dotnet executable

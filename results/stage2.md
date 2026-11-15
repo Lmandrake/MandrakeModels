@@ -1,9 +1,7 @@
 # Stage 2: review fixes, new competitors, rerun (2026-11-13)
 
-Item RIMMANDRAKE_HARDEN_FAST_WATER_SOLVERS_VIA_GPT_PIPES_RING. Input: the stage-1 skeptical review
-`D:\ClaudeWork\rimmandrake\conductor\water_gpt_20261113\REVIEW.md` (ranked fix list, GPT claims checked). Every figure is
-[measured] unless tagged. Probes: `D:\ClaudeWork\rimmandrake\conductor\water_gpt_20261113\probes\` and `probes2\`.
-What the screen shows, per scene: `D:\ClaudeWork\rimmandrake\conductor\water_gpt_20261113\LOOKED2.md`.
+Input: a skeptical external review of stage 1 (a ranked fix list, each claim checked before acting on it). Every figure is
+[measured] unless tagged. The probe scripts and per-scene viewing notes are working files kept outside this repository.
 
 ## New competitors (originals unchanged beside them)
 
