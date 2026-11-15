@@ -1,6 +1,6 @@
 """Ripple dampers for ``local_inertial_frcap``: each is a named competitor beside the original (2026-11-14).
 
-Why: ``local_inertial_frcap`` (the owner's pick, by card 2026-11-14) leaves criss-cross stripes in the dam-break reservoir
+Why: ``local_inertial_frcap`` (the author's pick, 2026-11-14) leaves criss-cross stripes in the dam-break reservoir
 at 16 s and 33 s: wave fronts reflecting between the walls, which nothing in the scheme damps. The Froude cap never binds
 in that slow water. Each class here adds one damper and is otherwise ``local_inertial_frcap`` unchanged. Every damper
 acts on the face discharge before the cap and before the shared donor-limited transfer, so volume stays exact.

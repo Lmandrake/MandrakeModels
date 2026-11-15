@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage C full run on Archmagi (WSL): build, fidelity, timing on three runtimes, stability, fuzz.
+# Stage C full run under WSL on Windows: build, fidelity, timing on three runtimes, stability, fuzz.
 #   bash csharp/run_stagec.sh            (from the MandrakeModels root)
 #   REF=local_inertial bash csharp/run_stagec.sh                  the uncapped reference (stage C as first measured)
 #   STEPS=fidelity,timing SIZES=250,325 bash csharp/run_stagec.sh  a subset; timing on the sizes exported
@@ -12,12 +12,12 @@
 # into $STAGEC/scenes_$REF (with checkpoints) and $STAGEC/load_$REF (timing loads), exported here when absent.
 # Output: $STAGEC/out_$REF (or $OUT).
 set -uo pipefail
-STAGEC=${STAGEC:-/mnt/d/ClaudeWork/mandrakemodels/stagec}
+: "${STAGEC:?set STAGEC to a work directory on a Windows drive, e.g. /mnt/d/work/stagec}"
 REF=${REF:-local_inertial_frcap}
 STEPS=${STEPS:-evensteps,fidelity,timing,spread,settled,wake,stability,fuzz}
 SIZES=${SIZES:-250,325,400}
 W=$(wslpath -w "$STAGEC")
-DOTNET=${DOTNET:-/mnt/c/Users/Mandrake/.dotnet/dotnet.exe}
+: "${DOTNET:?set DOTNET to a Windows dotnet.exe, e.g. /mnt/c/Program Files/dotnet/dotnet.exe}"
 export WSLENV=${WSLENV:+$WSLENV:}LITIMING_MUTATE
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SC="$STAGEC/scenes_$REF"; LD="$STAGEC/load_$REF"

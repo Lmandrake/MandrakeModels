@@ -1,8 +1,7 @@
 # Stage C: local-inertial in C# on integer decilitres (2026-11-13)
 
 Code: `csharp/` (see `csharp/README.md`). Run: `bash csharp/run_stagec.sh`; raw output
-`D:\ClaudeWork\mandrakemodels\stagec\out\` (timing_final.csv, fidelity_*.jsonl, stability_*.jsonl, fuzz_*.jsonl), drift probes
-`D:\ClaudeWork\mandrakemodels\stagec\drift\`. All figures below are [measured] unless tagged.
+under `$STAGEC/out_$REF/` (timing_final.csv, fidelity_*.jsonl, stability_*.jsonl, fuzz_*.jsonl); not published. All figures below are [measured] unless tagged.
 
 ## Runtimes
 
@@ -11,7 +10,7 @@ Code: `csharp/` (see `csharp/README.md`). Run: `bash csharp/run_stagec.sh`; raw 
   game runs; not inside Unity, so the game's own main-thread work is not competing for cache [guess ~70% that in-game cost is
   within +30% of these figures].
 - .NET Framework 4.8 (Windows CLR, same net472 exe) and .NET 8.0.29 (net8.0 build), for comparison.
-- Machine: Archmagi, 14 cores, shared (load 3 to 11; RimWorldWin64.exe was running on the desktop throughout). Single thread,
+- Machine: a 14-core Windows desktop, shared (load 3 to 11; RimWorldWin64.exe was running on the desktop throughout). Single thread,
   process priority High. Unity Mono matrix run twice; each row reports the worse repeat, repeats agreed within 5%.
 
 ## Port and tolerances (fixed before the first run)
@@ -128,11 +127,9 @@ fuzz_net8_pit.jsonl: 1000 sequences, 50037 edits, 150000 recompute checks, 0 fai
 
 ## Stage C, second pass (2026-11-14): Froude cap, sleeping water, spread recompute
 
-Items `RIMMANDRAKE_PORT_FROUDE_CAP_TO_CSHARP_WATER_DECIDED_TWICE` and `RIMMANDRAKE_BUILD_SETTLED_WATER_SLEEP_BAR_STILL_RED`.
 Run: `bash csharp/run_stagec.sh` (now `REF=local_inertial_frcap` by default); raw output
-`D:\ClaudeWork\mandrakemodels\stagec\out_frcap_final\`, planted faults in `out_mut_frcap1_final\`, `out_mut_frcap1\`,
-`out_mut_nocap\`, sleep probes in `out_dev\`. Every figure [measured] on Archmagi, shared with other helpers' builds and
-selftests (load not controlled), Unity Mono 6.13 unless named. **The owner has not chosen an engine (2026-11-14); this is
+(not published) under `$STAGEC`. Every figure [measured] on the same desktop, shared with other builds and
+selftests (load not controlled), Unity Mono 6.13 unless named. **The author has not chosen an engine (2026-11-14); this is
 measurement only.**
 
 What changed in the C#:
@@ -187,12 +184,12 @@ Mean ms per tick (12-tick recompute over 12 ticks), Unity Mono, worse of two rep
   fuzz sequences pass in wet and sleep modes, books 0 dL.
 - **Not solved: stirred water does not fall back asleep.** After that dig the lake keeps sloshing: 4 of 136 blocks asleep
   after 600 water-s, 8 of 136 after 3,000 (50 real minutes at speed 1); a sleep threshold 200 times looser (3e-3) gets only
-  28 of 136. The scheme barely damps waves in deep water. Filed: `RIMMANDRAKE_SETTLE_DISTURBED_LAKES_STILL_SLOSH_FIFTY_MINUTES_ON`.
+  28 of 136. The scheme barely damps waves in deep water. Filed as open work.
 - Slow forcing (evaporation, groundwater) acts on sleeping water without waking it; a body whose level the calendar changes
   unevenly must be woken by the game's own booking (not built). Sources, level-setters, rain and groundwater below its table
   pin their blocks awake.
 
-## Even steps for every driver (2026-11-14, RIMMANDRAKE_SWEEP_WATER_SOLVERS_ON_BIG_MAPS)
+## Even steps for every driver (2026-11-14)
 
 The stepping rule now lives once, at `EvenDt` in `csharp/LiTiming/LocalInertialDL.cs`: each interval to a target is split
 into equal steps, never full steps plus a clipped tail (`base.even_dt` on the Python side). The checkpoint driver
@@ -202,4 +199,4 @@ into equal steps, never full steps plus a clipped tail (`base.even_dt` on the Py
 in 12 water-s on a 0.3 s frame clock (FAIL); now 0, 0 and 1 (the dig at 5 s) on dam_break, swell and pit_dig at 128
 (PASS) [measured]. Re-exported reference, fidelity 40 of 40 on Unity Mono and .NET 8 (max L1 9e-5, as before); timing at
 250 and 325 unchanged within noise (census_river 325 0.157 vs 0.159 ms/tick, river 325 0.069 vs 0.071) [measured].
-Output: `D:\ClaudeWork\mandrakemodels\stagec_even\` (`proof\evensteps_before.txt`, `out_local_inertial_frcap\`).
+Raw output not published.

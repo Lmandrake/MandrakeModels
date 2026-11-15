@@ -13,7 +13,7 @@ check: "{\"reason\":\"bakeoff results table and gallery not yet produced\",\"rev
 ---
 
 ## Log
-- 2026-11-12T14:14 archmagi/ticket: new (manual)
+- 2026-11-12T14:14 ticket: new (manual)
 - 2026-11-12T17:20 bench/builder: bakeoff landed (594 runs, 64-500, results/results.md), compare tool and
   cross-check (ANUGA, Landlab, PhiFlow; results/crosscheck.md). 76 tests pass.
   OWED: PhiFlow smoke adapter disagrees at 64^2 (spurious speeds; likely adapter obstacles); pylbm adapter;
@@ -25,17 +25,16 @@ check: "{\"reason\":\"bakeoff results table and gallery not yet produced\",\"rev
   volume error + ms/step, red/orange banner frozen at last good frame, common clock, side-view strip for
   dam_break/swell, 120 frames, tiles 384 px at n=128), index.html + one page per scene (embedded webm).
   Old compare.html deleted. Re-rendered at 128 with --external: dam_break, river, lake_levelset,
-  ocean_edge, pit_dig, moat_evap. Stills: D:\ClaudeWork\mandrakemodels\compare\stills\ (18).
+  ocean_edge, pit_dig, moat_evap. Stills: <output root>/compare/stills/ (18).
   Looked at: dam_break, river, lake, ocean_edge, pit_dig (all read as water); moat_evap not yet looked at.
   DEFECT FOUND: pit_dig at n>=128 never floods the pit (the canal is cut a fixed 2 m into a bank that
   climbs away from the river, leaving a sill). Fix drafted, not landed: cut the canal to a level bed
   (z = 0.3) and stop it at the pit; then re-run the bakeoff pit_dig rows (they measured the dry-pit scene).
 NEXT, in order: fix pit_dig; render rain_groundwater, swell, lake_at_rest, then other physics, one at a
-  time (run1.sh in D:\ClaudeWork\mandrakemodels); look at moat + 3 more; optional dam_break n=250
+  time (run1.sh in the output root); look at moat + 3 more; optional dam_break n=250
   showcase; replace results/compare/*_64 with the new meta.json + stills; owner looks at index.html.
-- 2026-11-12 bench/detached (RIMMANDRAKE_SWEEP_WATER_SOLVERS_ON_BIG_MAPS): pit_dig fixed (canal bed falls from the river bed
+- 2026-11-12 bench/detached: pit_dig fixed (canal bed falls from the river bed
   to a smaller, nearer pit; 03ba39e) and moat_evap made to dry visibly (tilted floor, 15 mm/s; fad3ee1), each with a test
   that fails on the old scene (7/7) and passes now; pit_dig and moat_evap bakeoff rows re-run (6840ddf and this commit);
-  rendered at 128 and looked at: all nine water scenes (index.html now lists them). Notes:
-  D:\ClaudeWork\rimmandrake\conductor\water_models_20261112\LOOKED.md. Still owed: other-physics pages, PhiFlow
+  rendered at 128 and looked at: all nine water scenes (index.html now lists them). Viewing notes kept outside the repo. Still owed: other-physics pages, PhiFlow
   adapter at 64, pylbm adapter, idle re-time, C# measurement.

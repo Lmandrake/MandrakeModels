@@ -1,6 +1,6 @@
 # Fluid solver bakeoff: design (2026-11-12)
 
-Ticket `MANDRAKEMODELS_BUILD_FLUID_BAKEOFF_ONE_INTERFACE_MANY_WATERS`. Owner (2026-11-12): a Python bakeoff of
+Ticket: `tickets/MANDRAKEMODELS_BUILD_FLUID_BAKEOFF_ONE_INTERFACE_MANY_WATERS.md`. The ask (2026-11-12): a Python bakeoff of
 fluid solvers on gridded cells, "useful for visualizations, backgrounds, and a variety of other realizations",
 first customer RimMandrake FlowWorks (rivers, lakes, oceans, maybe waves, on big maps).
 Inputs: the FlowWorks literature review (2026-11-12) and RimMandrake's bakeoff plan

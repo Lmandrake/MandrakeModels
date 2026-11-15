@@ -20,7 +20,7 @@ namespace LiTiming
     ///   LiTiming wake      FILE.lis OUT.jsonl  a dig into sleeping water must flow as it does in water that never slept
     ///   LiTiming evensteps FILE.lis          every driver takes equal steps (the stepping rule, LocalInertialDL.EvenDt)
     /// Modes: full (every square), wet (wet blocks, dilated), sleep (wet, and settled water sleeps).
-    /// The game clock (owner card 2026-11-12): one water-second per 60 ticks, a recompute every 12 ticks = 0.2 water-s,
+    /// The game clock (design choice, 2026-11-12): one water-second per 60 ticks, a recompute every 12 ticks = 0.2 water-s,
     /// stepped in CFL substeps; ms per tick is the recompute's cost over 12 ticks.
     /// </summary>
     public static class Program

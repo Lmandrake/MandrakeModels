@@ -39,6 +39,5 @@ These are a curated subset (one video and two stills per scene) kept small for t
 | `stage2.md` | stage 2 (2026-11-13): fixes from an external review, the new competitors `local_inertial_frcap`, `local_inertial_frcap07` and `pipes_theta`, a Froude-cap sweep, and notes on what each scene looks like on screen |
 | `stagec.md` | stage C (2026-11-13 and 14): the C# integer port, its fidelity against Python, cost per game tick on Unity Mono, .NET Framework 4.8 and .NET 8, the bars it was held to, and the equal-steps finding |
 
-`stage2.md` and `stagec.md` are working records, left as written. They cite paths on the author's machines
-(`D:\ClaudeWork\...`) and work items in his private tracker (names such as `RIMMANDRAKE_...`). Those files and
-items are not part of this repository; the write-ups carry the figures that matter.
+`stage2.md` and `stagec.md` are working records. Their raw output and probe scripts are not published; the
+write-ups carry the figures that matter.
