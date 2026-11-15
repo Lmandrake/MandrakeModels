@@ -195,9 +195,14 @@ def run_one(cls, sc, samples, max_wall):
                 if flow:
                     dt = s.stable_dt()
                 else:
-                    dt = min(s.stable_dt(), target - s.t)
+                    gap = target - s.t
+                    dt = min(s.stable_dt(), gap)
                     if sc.kind == "water":
                         dt = min(dt, WATER_DT_CAP)
+                    if dt < gap:
+                        # equal steps to the frame: a short tail step after full ones (0.19 s then 0.11 s on dam_break)
+                        # grew local_inertial's reservoir roughness 500-fold by 33 s (measured 2026-11-14)
+                        dt = gap / math.ceil(gap / dt - 1e-9)
                     if events and events[0][0] - s.t > 1e-9:
                         dt = min(dt, events[0][0] - s.t)
                     dt = max(dt, 1e-6)

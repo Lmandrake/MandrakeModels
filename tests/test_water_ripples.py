@@ -44,3 +44,24 @@ def test_smoothdiff_fr_settles_the_reservoir():
     assert r_cap > 1.5 * r_ref            # the defect: frcap's reservoir is rough (1.65x measured)
     assert r_fix < 1.3 * r_ref            # the fix: within 1.3x of the full shallow-water referee (1.16x measured)
     assert err < 1e-12
+
+
+def _compare_clock_rough(compare_module):
+    """Reservoir roughness at the 33 s frame when compare.run_one drives local_inertial_frcap on its 0.3 s frame clock."""
+    sc = scenes.build("dam_break", 128)
+    samples = np.linspace(0, 36.0, 121).tolist()[:111]          # up to 33 s
+    fr = compare_module.run_one(REGISTRY["local_inertial_frcap"], sc, samples, 300)
+    sn = fr[-1]["snap"]
+    c = int(np.where(sc.init["wall"].any(0))[0].max())
+    e = np.asarray(sn["h"], float) + np.asarray(sn["z"], float)
+    nb = 0.25 * (np.roll(e, 1, 0) + np.roll(e, -1, 0) + np.roll(e, 1, 1) + np.roll(e, -1, 1))
+    m = np.zeros_like(e, bool)
+    m[2:-2, 2:c - 2] = True
+    m &= np.asarray(sn["h"]) > 1e-3
+    return float(np.abs(e - nb)[m].mean())
+
+
+def test_compare_clock_takes_equal_steps():
+    # clipping the last step to each frame (0.19 s then 0.11 s) grew this to 0.18 m; equal steps keep it near 3e-4 m
+    from mandrakemodels import compare
+    assert _compare_clock_rough(compare) < 1e-3
