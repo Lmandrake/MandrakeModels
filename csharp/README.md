@@ -13,8 +13,8 @@ for timing on the runtime RimWorld uses. Not mod code; nothing here touches the 
 - `MonoHost/monohost.py`: runs the net472 build on **RimWorld's own Mono** (`MonoBleedingEdge\EmbedRuntime\mono-2.0-bdwgc.dll`
   with `RimWorldWin64_Data\Managed` as the class library), embedded from Windows Python by ctypes the way Unity embeds it.
 - `LiTiming/Spreader.cs`: one recompute spread over its 12 ticks (weighted block-passes), bitwise equal to running it whole.
-- `run_stagec.sh`: the whole run; `REF=` picks the Python reference solver (default `local_inertial_frcap`), `STEPS=` a subset (build on `D:\ClaudeWork\mandrakemodels\stagec`, since dotnet.exe cannot build from a
-  WSL path).
+- `run_stagec.sh`: the whole run; `REF=` picks the Python reference solver (default `local_inertial_frcap`), `STEPS=` a subset, `STAGEC=` the work directory (on a Windows drive, since dotnet.exe cannot build from a
+  WSL path), `DOTNET=` the dotnet executable. Written for WSL on Windows; see `docs/csharp.md` for running it elsewhere.
 
 Scenes:
 

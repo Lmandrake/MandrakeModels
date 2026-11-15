@@ -2,7 +2,6 @@
 
 Item RIMMANDRAKE_TRY_RIPPLE_DETECTOR_TREAT_ONLY_WHERE_IT_RIPPLES; the owner's idea: "I also wonder if the ripples are
 detectable and thus could be fixed with a local treatment that only happens when needed for efficiency."
-Results and the detector census: D:\\ClaudeWork\\rimmandrake\\conductor\\water_ripples_20261114\\RESULT_DETECTOR.md.
 Kept self-contained (the global dampers live in a sibling's file); the original engines are untouched.
 """
 from __future__ import annotations
@@ -54,7 +53,6 @@ def lap4(e, wet):
 
 def ripple_flags(s, rough=1.5e-4, slow_fr=0.2):
     """The detector: wet cells whose 3x3-mean surface roughness |eta - mean(4 neighbours)| exceeds ``rough`` (m) while
-    the local flow is slow (cell Froude below ``slow_fr``). Census of it and five other candidates: RESULT_DETECTOR.md."""
     wet = (s.h > WET) & ~s.wall
     lp = ndimage.uniform_filter(lap4(s.eta, wet), 3, mode="constant")
     u, v = s.velocity()
