@@ -3,6 +3,7 @@ name = "mandrakemodels"
 version = "0.1.0"
 description = "Gridded-cell physics models: water, waves, diffusion, smoke, lattice Boltzmann"
 requires-python = ">=3.11,<3.14"
+license = "MIT"
 dependencies = ["numpy>=1.26", "scipy>=1.11", "pillow>=10", "matplotlib>=3.8"]
 
 [project.optional-dependencies]
