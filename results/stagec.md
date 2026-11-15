@@ -191,3 +191,15 @@ Mean ms per tick (12-tick recompute over 12 ticks), Unity Mono, worse of two rep
 - Slow forcing (evaporation, groundwater) acts on sleeping water without waking it; a body whose level the calendar changes
   unevenly must be woken by the game's own booking (not built). Sources, level-setters, rain and groundwater below its table
   pin their blocks awake.
+
+## Even steps for every driver (2026-11-14, RIMMANDRAKE_SWEEP_WATER_SOLVERS_ON_BIG_MAPS)
+
+The stepping rule now lives once, at `EvenDt` in `csharp/LiTiming/LocalInertialDL.cs`: each interval to a target is split
+into equal steps, never full steps plus a clipped tail (`base.even_dt` on the Python side). The checkpoint driver
+(`fidelity`, `drift --pydt`) and Python's `csharp_export.reference`, `bakeoff.choose_dt` and `breach_volume` used to clip;
+`drift --ragged` is gone (the `evensteps` check keeps that feed as its known-bad control). The engine counts clipped tails
+(`TailSteps`); `LiTiming evensteps` allows each driver at most one per dig. On the old checkpoint driver it read 39 tails
+in 12 water-s on a 0.3 s frame clock (FAIL); now 0, 0 and 1 (the dig at 5 s) on dam_break, swell and pit_dig at 128
+(PASS) [measured]. Re-exported reference, fidelity 40 of 40 on Unity Mono and .NET 8 (max L1 9e-5, as before); timing at
+250 and 325 unchanged within noise (census_river 325 0.157 vs 0.159 ms/tick, river 325 0.069 vs 0.071) [measured].
+Output: `D:\ClaudeWork\mandrakemodels\stagec_even\` (`proof\evensteps_before.txt`, `out_local_inertial_frcap\`).

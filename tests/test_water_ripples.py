@@ -65,3 +65,33 @@ def test_compare_clock_takes_equal_steps():
     # clipping the last step to each frame (0.19 s then 0.11 s) grew this to 0.18 m; equal steps keep it near 3e-4 m
     from mandrakemodels import compare
     assert _compare_clock_rough(compare) < 1e-3
+
+
+def _tails(dts):
+    """Steps shorter than 0.9 of both neighbours: clipped tails (the C# engine's TailSteps audit)."""
+    return sum(1 for a, b, c in zip(dts, dts[1:], dts[2:]) if b < 0.9 * a and b < 0.9 * c)
+
+
+def test_csharp_reference_takes_equal_steps():
+    # the stepping rule (base.even_dt): csharp_export.reference, which the C# fidelity check copies step for step,
+    # must not clip a tail to each checkpoint; the old clip read 19 tails here, so the audit can see
+    from mandrakemodels import csharp_export
+    cls = REGISTRY["local_inertial_frcap"]
+    dts = []
+
+    class Rec(cls):
+        def step(self, dt):
+            dts.append(dt)
+            super().step(dt)
+
+    sc = scenes.build("dam_break", 64)
+    times = [0.3 * k for k in range(1, 21)]
+    csharp_export.reference(sc, times, Rec)
+    assert _tails(dts) == 0
+    s, old = cls.from_scene(sc), []
+    for tc in times:
+        while s.t < tc - 1e-9:
+            dt = min(s.stable_dt(), 5.0, tc - s.t)
+            old.append(dt)
+            s.step(dt)
+    assert _tails(old) > 0

@@ -5,8 +5,8 @@
 
 Writes ``DIR/<scene>_<n>.lis`` (little-endian binary, read by ``csharp/LiTiming/SceneFile.cs``): the scene's bed, depth,
 walls, forcing and events, then the reference solver's depth at a few checkpoint times. The file records the reference's face Froude cap
-(0 = none), so the C# side runs the same scheme. Both sides choose dt by the
-same rule (bakeoff ``choose_dt`` plus landing exactly on each checkpoint), so the comparison is step for step.
+(0 = none), so the C# side runs the same scheme. Both sides step by the same rule (``base.even_dt``: equal steps
+to each checkpoint or event, the C# ``StepTo``), so the comparison is step for step.
 Callable forcing is encoded by kind: the swell level is a sine (amplitude, period); any other callable is refused.
 """
 from __future__ import annotations
@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 
 from . import scenes
+from .base import even_dt
 from .bakeoff import WATER_DT_CAP
 from .solvers.local_inertial import SOLVERS
 
@@ -48,7 +49,7 @@ def fr_max_of(cls) -> float:
 
 
 def reference(sc, times, cls):
-    """Run the reference solver with the bakeoff dt rule, landing on each checkpoint time; return h at each."""
+    """Run the reference solver in equal steps to each checkpoint and event; return h at each checkpoint."""
     s = cls.from_scene(sc)
     events = sorted(sc.events, key=lambda e: e[0])
     out, steps = [], 0
@@ -57,12 +58,8 @@ def reference(sc, times, cls):
             while events and s.t >= events[0][0] - 1e-9:
                 _, meth, kw = events.pop(0)
                 getattr(s, meth)(**kw)
-            dt = min(s.stable_dt(), WATER_DT_CAP, tc - s.t)
-            if events:
-                nxt = events[0][0] - s.t
-                if nxt > 1e-9:
-                    dt = min(dt, nxt)
-            s.step(dt)
+            end = min(tc, events[0][0]) if events else tc
+            s.step(even_dt(min(s.stable_dt(), WATER_DT_CAP), end - s.t))
             steps += 1
         out.append((s.t, s.h.copy(), steps, s.volume_error()))
     return out

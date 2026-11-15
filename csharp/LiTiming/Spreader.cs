@@ -5,7 +5,7 @@ namespace LiTiming
     /// <summary>
     /// Spreads each 12-tick recompute's work over its 12 ticks (stage C finding: unspread, the whole recompute lands in one
     /// tick, 17 to 20 ms on the 325 stress load). A recompute is k equal substeps (k = ceil(0.2 s / CFL dt), fixed at the
-    /// recompute's start: a ragged split makes local-inertial slosh); each substep is four passes over the active blocks
+    /// recompute's start, by the stepping rule in LocalInertialDL.EvenDt); each substep is four passes over the active blocks
     /// (faces, limit, move, then the step's end). Each tick does its share of the work left, counted in block-passes
     /// weighted by what each pass costs (Unity Mono profile, 2026-11-14: faces ~87% of a step on the 325 river and stress
     /// loads, move ~8%, limit, clear and refresh ~1 to 2% each), so the last tick of a recompute always finishes it. The

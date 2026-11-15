@@ -187,6 +187,39 @@ namespace LiTiming
 
         public double StableDt() => Alpha * Dx / Math.Sqrt(G * Math.Max(vmax * MPerDl, 1e-3));
 
+        // ---------------------------------------------------------------------------------------- the stepping rule
+        /// <summary>
+        /// THE STEPPING RULE, binding on every driver of this engine (the game, this console, any harness): equal steps.
+        /// Each interval to a target time (a recompute's end, a checkpoint, an edit, a picture frame) is split into
+        /// k = ceil(time left / min(StableDt, dtCap)) equal steps, never full steps plus a short tail clipped to the target.
+        /// The scheme cannot take alternating step sizes: a tail clipped to every 0.3 s frame (0.19 s, 0.11 s, ...) grew a
+        /// dam-break reservoir's criss-cross roughness 500-fold by 33 s (MandrakeModels a72cc7f, 2026-11-14), and a 1e-8 s
+        /// tail once moved a lake at rest 2.1 m in 20 s (2026-11-13). An edit ends the interval it falls in, so it may leave
+        /// one short interval (the game avoids even that by queueing a dig to its recompute's start); a clock never clips.
+        /// AdvanceTo re-splits the time left at every step (safe when the CFL limit falls mid-interval); Spreader fixes k
+        /// at a recompute's start so the work can be planned over 12 ticks. TailSteps counts breaches, and the harness's
+        /// <c>evensteps</c> check allows each driver at most one per edit.
+        /// </summary>
+        public double EvenDt(double left, double dtCap)
+        {
+            double dt = Math.Min(StableDt(), dtCap);
+            return left / Math.Max(1.0, Math.Ceiling(left / dt - 1e-9));
+        }
+
+        /// <summary>Advance to <paramref name="target"/> by the stepping rule. Returns steps taken.</summary>
+        public int AdvanceTo(double target, double dtCap)
+        {
+            int n = 0;
+            while (T < target - 1e-9) { Step(EvenDt(target - T, dtCap)); n++; }
+            return n;
+        }
+
+        /// <summary>Steps shorter than 0.9 of both neighbours: clipped tails, breaches of the stepping rule.</summary>
+        public long TailSteps;
+        /// <summary>Start time of the first clipped tail (NaN = none).</summary>
+        public double FirstTailT = double.NaN;
+        double dtPrev, dtPrev2;
+
         // ------------------------------------------------------------------------------------------------- the step
         /// <summary>Per-phase Stopwatch ticks (select, faces, limit, move, clear, forcing, refresh) when Profile is set.</summary>
         public static bool Profile, NoCbrt, MutateWallDeletes, MutateNoWake;
@@ -215,6 +248,8 @@ namespace LiTiming
 
         public void BeginStep(double dt)
         {
+            if (dtPrev2 > 0 && dtPrev < 0.9 * dtPrev2 && dtPrev < 0.9 * dt) { TailSteps++; if (TailSteps == 1) FirstTailT = T - dtPrev; }
+            dtPrev2 = dtPrev; dtPrev = dt;
             SelectBlocks();
             stepDt = dt;
             limitedAcc = 0;

@@ -37,6 +37,7 @@ from pathlib import Path
 import numpy as np
 
 from . import render, scenes
+from .base import even_dt
 from .paths import out_root
 from .solvers import REGISTRY, for_kind
 
@@ -91,12 +92,10 @@ def _num(d):
 
 def choose_dt(s, sc, events_left):
     if sc.kind == "water":
-        dt = min(s.stable_dt(), WATER_DT_CAP, sc.duration - s.t)
-        if events_left:
-            nxt = events_left[0][0] - s.t
-            if nxt > 1e-9:
-                dt = min(dt, nxt)
-        return max(dt, 1e-6)
+        end = sc.duration
+        if events_left and events_left[0][0] - s.t > 1e-9:
+            end = min(end, events_left[0][0])
+        return max(even_dt(min(s.stable_dt(), WATER_DT_CAP), end - s.t), 1e-6)
     if sc.kind == "flow":
         return s.stable_dt()
     return min(s.stable_dt(), sc.duration / 50.0, sc.duration - s.t)
@@ -425,7 +424,7 @@ def breach_volume(cls, n=128, T=20.0):
     s = cls.from_scene(sc)
     r0 = float(s.h[:, c:].sum())
     while s.t < T - 1e-9:
-        s.step(min(s.stable_dt(), WATER_DT_CAP, T - s.t))
+        s.step(even_dt(min(s.stable_dt(), WATER_DT_CAP), T - s.t))
         if s.blown_up():
             return None
     return (float(s.h[:, c:].sum()) - r0) * sc.grid.dx ** 2
