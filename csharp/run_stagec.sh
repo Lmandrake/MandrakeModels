@@ -3,7 +3,7 @@
 #   bash csharp/run_stagec.sh            (from the MandrakeModels root)
 #   REF=local_inertial bash csharp/run_stagec.sh                  the uncapped reference (stage C as first measured)
 #   STEPS=fidelity,timing SIZES=250,325 bash csharp/run_stagec.sh  a subset; timing on the sizes exported
-#   steps: fidelity (40 rows vs Python; a sleeping twin within the same tolerances), timing (modes full, wet, sleep),
+#   steps: evensteps (every driver takes equal steps, one short interval per edit at most: LocalInertialDL.EvenDt), fidelity (40 rows vs Python; a sleeping twin within the same tolerances), timing (modes full, wet, sleep),
 #   spread (each recompute over its 12 ticks, bitwise against whole), settled (sleeping lake bar), wake (a dig into
 #   sleeping water flows as in water that never slept), stability, fuzz
 #   LITIMING_MUTATE=frcap1 STEPS=fidelity OUT=... bash csharp/run_stagec.sh   a planted fault (passed to Windows too)
@@ -14,7 +14,7 @@
 set -uo pipefail
 STAGEC=${STAGEC:-/mnt/d/ClaudeWork/mandrakemodels/stagec}
 REF=${REF:-local_inertial_frcap}
-STEPS=${STEPS:-fidelity,timing,spread,settled,wake,stability,fuzz}
+STEPS=${STEPS:-evensteps,fidelity,timing,spread,settled,wake,stability,fuzz}
 SIZES=${SIZES:-250,325,400}
 W=$(wslpath -w "$STAGEC")
 DOTNET=${DOTNET:-/mnt/c/Users/Mandrake/.dotnet/dotnet.exe}
@@ -43,6 +43,12 @@ mkdir -p "$O"; WO=$(wslpath -w "$O")
 step() { echo "$(date '+%H:%M') $*" >> "$O/run_stagec.milestones"; }
 rc=0
 step "start ref=$REF steps=$STEPS mutate=${LITIMING_MUTATE:-none}"
+if has evensteps; then
+  : > "$O/evensteps_net8.log"
+  for f in dam_break_128 pit_dig_128 swell_128; do
+    net8 evensteps "$WSC\\$f.lis" >> "$O/evensteps_net8.log" 2>&1 || rc=1
+  done; step "evensteps net8: $(grep -c PASS "$O/evensteps_net8.log") of 3 PASS"
+fi
 if has fidelity; then
   mono fidelity "$WSC" "$WO\\fidelity_mono.jsonl" > "$O/fidelity_mono.log" 2>&1 || rc=1; step "fidelity mono: $(tail -1 "$O/fidelity_mono.log")"
   net8 fidelity "$WSC" "$WO\\fidelity_net8.jsonl" > "$O/fidelity_net8.log" 2>&1 || rc=1; step "fidelity net8: $(tail -1 "$O/fidelity_net8.log")"

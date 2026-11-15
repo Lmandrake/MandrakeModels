@@ -8,7 +8,8 @@ for timing on the runtime RimWorld uses. Not mod code; nothing here touches the 
   whole dL once with opposite signs, so the books are exact. Wet-only stepping in 16x16 blocks (dilated by one block)
   gives bitwise the same answer as the full grid.
 - `LiTiming/Program.cs`: `fidelity` (against Python checkpoints), `timing` (game clock: a recompute every 12 ticks =
-  0.2 water-s, CFL substeps), `stability`, `fuzz`, `profile`.
+  0.2 water-s, CFL substeps), `stability`, `fuzz`, `profile`, `evensteps` (every driver takes equal steps: the
+  stepping rule at `LocalInertialDL.EvenDt`, binding on any driver of the engine, the game's included).
 - `MonoHost/monohost.py`: runs the net472 build on **RimWorld's own Mono** (`MonoBleedingEdge\EmbedRuntime\mono-2.0-bdwgc.dll`
   with `RimWorldWin64_Data\Managed` as the class library), embedded from Windows Python by ctypes the way Unity embeds it.
 - `LiTiming/Spreader.cs`: one recompute spread over its 12 ticks (weighted block-passes), bitwise equal to running it whole.

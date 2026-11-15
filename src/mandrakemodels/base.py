@@ -23,6 +23,13 @@ G = 9.81
 EPS_H = 1e-6  # depth below which a cell counts as dry (m)
 
 
+def even_dt(dt: float, left: float) -> float:
+    """The stepping rule for water solvers: split the time ``left`` to the next target (checkpoint, frame, event) into
+    equal steps no longer than ``dt``, never full steps plus a short clipped tail. Stated once, with its evidence, at
+    ``EvenDt`` in ``csharp/LiTiming/LocalInertialDL.cs``."""
+    return left / max(1.0, math.ceil(left / dt - 1e-9))
+
+
 @dataclass
 class Grid:
     ny: int

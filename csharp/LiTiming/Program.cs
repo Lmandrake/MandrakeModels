@@ -18,6 +18,7 @@ namespace LiTiming
     ///                      its 12 ticks, checked bitwise against the recompute in one go
     ///   LiTiming settled   DIR OUT.csv [--only lake_at_rest]  sleeping: recomputes until asleep, then cost per tick
     ///   LiTiming wake      FILE.lis OUT.jsonl  a dig into sleeping water must flow as it does in water that never slept
+    ///   LiTiming evensteps FILE.lis          every driver takes equal steps (the stepping rule, LocalInertialDL.EvenDt)
     /// Modes: full (every square), wet (wet blocks, dilated), sleep (wet, and settled water sleeps).
     /// The game clock (owner card 2026-11-12): one water-second per 60 ticks, a recompute every 12 ticks = 0.2 water-s,
     /// stepped in CFL substeps; ms per tick is the recompute's cost over 12 ticks.
@@ -59,17 +60,11 @@ namespace LiTiming
                         var sc = SceneFile.Read(args[1]);
                         double T = double.Parse(Opt(args, "--seconds", "10000"), Inv);
                         var m = LocalInertialDL.FromScene(sc); m.WetOnly = Opt(args, "--modes", "wet") == "wet";
-                        bool pydt = Array.IndexOf(args, "--pydt") >= 0, ragged = Array.IndexOf(args, "--ragged") >= 0;
+                        bool pydt = Array.IndexOf(args, "--pydt") >= 0;
                         var eta0 = Eta(m); double next = double.Parse(Opt(args, "--every", "100"), Inv), every = next;
                         while (m.T < T - 1e-9)
                         {
-                            if (pydt) m.Step(Math.Min(Math.Min(m.StableDt(), DtCap), next - m.T));
-                            else if (ragged)
-                            {
-                                // the old recompute split: stable steps then a short remainder (down to ~1e-9 s)
-                                double end = m.T + Recompute;
-                                while (m.T < end - 1e-9) m.Step(Math.Min(Math.Min(m.StableDt(), DtCap), end - m.T));
-                            }
+                            if (pydt) StepTo(m, null, next);
                             else Advance(m, null);
                             if (m.T >= next - 1e-9)
                             {
@@ -86,6 +81,7 @@ namespace LiTiming
                 case "spread": return SpreadTiming(args[1], args[2], Opt(args, "--modes", "wet,sleep").Split(','), Opt(args, "--only", ""));
                 case "settled": return Settled(args[1], args[2], Opt(args, "--only", "lake_at_rest"));
                 case "wake": return Wake(args[1], args[2]);
+                case "evensteps": return EvenSteps(args[1]);
             }
             return 2;
         }
@@ -142,14 +138,8 @@ namespace LiTiming
                         foreach (var m in new[] { full, wet, slp })
                         {
                             var q = m == full ? digs : m == wet ? digs2 : digs3;
-                            while (m.T < cp.t - 1e-9)
-                            {
-                                while (q.Count > 0 && m.T >= q.Peek().t - 1e-9) { var d = q.Dequeue(); m.Dig(d.mask, d.depth); }
-                                double dt = Math.Min(Math.Min(m.StableDt(), DtCap), cp.t - m.T);
-                                if (q.Count > 0 && q.Peek().t - m.T > 1e-9) dt = Math.Min(dt, q.Peek().t - m.T);
-                                m.Step(dt);
-                                if (m == full) steps++;
-                            }
+                            int n = StepTo(m, q, cp.t);
+                            if (m == full) steps += n;
                         }
                         var h = full.DepthArray();
                         var hp = cp.h;
@@ -230,14 +220,61 @@ namespace LiTiming
             return e;
         }
 
+        /// <summary>Advance to time t (a checkpoint or sample) by the stepping rule, applying digs due on the way: a dig
+        /// ends one interval and starts the next. Returns steps.</summary>
+        static int StepTo(LocalInertialDL m, Queue<(double t, bool[] mask, double[] depth)> q, double t)
+        {
+            int n = 0;
+            while (m.T < t - 1e-9)
+            {
+                while (q != null && q.Count > 0 && m.T >= q.Peek().t - 1e-9) { var d = q.Dequeue(); m.Dig(d.mask, d.depth); }
+                double end = q != null && q.Count > 0 ? Math.Min(t, q.Peek().t) : t;
+                n += m.AdvanceTo(end, DtCap);
+            }
+            return n;
+        }
+
+        // -------------------------------------------------------------------------------------------- even steps
+        /// <summary>Every driver of the engine takes equal steps (the stepping rule: LocalInertialDL.EvenDt). Runs each
+        /// driver on the scene for 12 water-s, the checkpoint driver on a 0.3 s frame clock (the clock that striped the
+        /// compare pages), and allows each at most one clipped tail step per dig in the window (an edit ends its interval).
+        /// A ragged feed (full steps, then a tail clipped to each frame) must read above that, or the audit is blind.</summary>
+        static int EvenSteps(string scenePath)
+        {
+            var s = SceneFile.Read(scenePath);
+            const double T = 12.0, Frame = 0.3;
+            int frames = (int)Math.Round(T / Frame), recs = (int)Math.Round(T / Recompute);
+            var rows = new List<(string name, LocalInertialDL m, bool wantZero)>();
+            var bad = Make(s, "wet");
+            for (int k = 1; k <= frames; k++)
+                while (bad.T < k * Frame - 1e-9) bad.Step(Math.Min(Math.Min(bad.StableDt(), DtCap), k * Frame - bad.T));
+            rows.Add(("ragged_feed_control", bad, false));
+            var a = Make(s, "wet"); var qa = new Queue<(double, bool[], double[])>(s.Digs);
+            for (int k = 1; k <= frames; k++) StepTo(a, qa, k * Frame);
+            rows.Add(("checkpoint_driver(fidelity,drift)", a, true));
+            var b = Make(s, "wet"); var qb = new Queue<(double, bool[], double[])>(s.Digs);
+            for (int r = 0; r < recs; r++) Advance(b, qb);
+            rows.Add(("recompute_driver(timing,stability,settled,wake,fuzz)", b, true));
+            var c = Make(s, "wet"); var sp = new Spreader(c, Recompute, DtCap);
+            for (int t = 0; t < recs * Spreader.Ticks; t++) sp.Tick();
+            rows.Add(("spread_driver(Spreader.Tick)", c, true));
+            int edits = s.Digs.Count(d => d.t < T), fails = 0;
+            foreach (var (name, m, wantZero) in rows)
+            {
+                bool ok = wantZero ? m.TailSteps <= edits : m.TailSteps > edits;
+                if (!ok) fails++;
+                Console.WriteLine((ok ? "ok   " : "FAIL ") + name + " tail_steps=" + m.TailSteps + " first_tail_t=" + m.FirstTailT.ToString("F3", Inv) + " steps=" + m.Steps + " t=" + m.T.ToString("F3", Inv));
+            }
+            Console.WriteLine((fails == 0 ? "EVENSTEPS PASS " + s.Name : "EVENSTEPS FAIL " + s.Name + " rows=" + fails) + " (edits in window: " + edits + ")");
+            return fails == 0 ? 0 : 1;
+        }
+
         // ------------------------------------------------------------------------------------------------ timing
         /// <summary>Advance one recompute (0.2 water-s) in CFL substeps, applying digs due. Returns substeps.</summary>
         static int Advance(LocalInertialDL m, Queue<(double t, bool[] mask, double[] depth)> digs)
         {
             while (digs != null && digs.Count > 0 && m.T >= digs.Peek().t - 1e-9) { var d = digs.Dequeue(); m.Dig(d.mask, d.depth); }
-            // equal substeps: a recompute split as (stable, stable, short remainder) once left a 1e-8 s step whose
-            // rounded-up whole dL became a huge discharge memory (lake at rest moved 2.1 m in 20 s, 2026-11-13)
-            return Spreader.AdvanceWhole(m, Recompute, DtCap);
+            return Spreader.AdvanceWhole(m, Recompute, DtCap);   // the stepping rule (LocalInertialDL.EvenDt)
         }
 
         static int Timing(string dir, string outPath, string[] modes, string only, string label)
