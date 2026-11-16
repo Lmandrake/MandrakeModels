@@ -6,11 +6,13 @@ type: build
 status: open
 owner: lukas
 created: 2026-11-12T14:14:01-08:00
-updated: 2026-11-13T10:00:00-08:00
+updated: 2026-11-16T07:16:44-08:00
 effort: 6h
 source: manual
 check: "{\"reason\":\"bakeoff results table and gallery not yet produced\",\"review_by\":\"2026-11-26\",\"type\":\"gap\"}"
 ---
+
+2026-11-16: repo made PUBLIC (MIT) with full docs (README, docs/, results/README.md); private paths/tracker ids stripped. Still owed: register ripsense, refresh results/ with ripple dampers.
 
 ## Log
 - 2026-11-12T14:14 ticket: new (manual)
@@ -38,3 +40,4 @@ NEXT, in order: fix pit_dig; render rain_groundwater, swell, lake_at_rest, then 
   that fails on the old scene (7/7) and passes now; pit_dig and moat_evap bakeoff rows re-run (6840ddf and this commit);
   rendered at 128 and looked at: all nine water scenes (index.html now lists them). Viewing notes kept outside the repo. Still owed: other-physics pages, PhiFlow
   adapter at 64, pylbm adapter, idle re-time, C# measurement.
+- 2026-11-16T07:16 mt-400028/ticket: note
