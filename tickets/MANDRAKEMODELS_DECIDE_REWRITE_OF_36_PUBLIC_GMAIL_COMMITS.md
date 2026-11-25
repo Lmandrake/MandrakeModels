@@ -11,7 +11,7 @@ source: agent
 check: "{\"reason\":\"action ticket: no mechanical outcome check given\",\"review_by\":\"2026-12-08\",\"type\":\"gap\"}"
 ---
 
-identity_check.py 2026-11-24: github.com/Lmandrake/MandrakeModels is PUBLIC; 36 commits author / 38 committer [personal address], 2026-11-12..2026-11-14. The checkout now carries the repo-local noreply. Rewriting public history is a force-push: owner's decision. Acceptance test: none, an owner decision.
+identity_check.py 2026-11-24: github.com/Lmandrake/MandrakeModels is PUBLIC; 36 commits author / 38 committer the owner's personal Gmail address, 2026-11-12..2026-11-14. The checkout now carries the repo-local noreply. Rewriting public history is a force-push: owner's decision. Acceptance test: none, an owner decision.
 
 ## Log
 - 2026-11-24T19:53 mt-400028/ticket: new (agent)
